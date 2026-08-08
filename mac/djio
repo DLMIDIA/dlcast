@@ -216,7 +216,7 @@ cmd_stop() {
     return 0
   fi
 
-  pkill -f "mediamtx .*${CONFIG}" 2>/dev/null
+  pkill -f "mediamtx.*${CONFIG}" 2>/dev/null
 
   local tentativas=0
   while [ $tentativas -lt 20 ]; do
@@ -286,7 +286,7 @@ cmd_status() {
 
   local ip; ip="$(detectar_ip)"
   echo "  Estado : ${VERDE}RODANDO${FIM}"
-  echo "  PID    : $(pgrep -f "mediamtx .*${CONFIG}" | head -1)"
+  echo "  PID    : $(pgrep -f "mediamtx.*${CONFIG}" | head -1)"
   echo "  IP     : ${ip:-desconhecido}"
   echo
 
@@ -762,7 +762,7 @@ cmd_doctor() {
     ok "Nenhum problema encontrado. Sistema pronto para voar."
   else
     aviso "$problemas ponto(s) de atencao encontrado(s) acima."
-    info "Consulte docs/06-TROUBLESHOOTING.md para as solucoes."
+    info "Consulte docs/03-SOLUCAO-DE-PROBLEMAS.md para as solucoes."
   fi
 }
 

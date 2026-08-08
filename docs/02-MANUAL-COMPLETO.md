@@ -295,8 +295,8 @@ pacotes perdidos automaticamente.
 ```
 DJIO/
 │
-├── CLAUDE.md                  Instruções lidas pelo Claude Code a cada sessão
 ├── README.md                  Porta de entrada do projeto
+├── SUPORTE-IA.md              Arquivo para diagnosticar com IA
 │
 ├── COMECE-AQUI.html           PONTO DE ENTRADA (detecta seu sistema)
 │
@@ -326,10 +326,10 @@ DJIO/
 │   └── instalar-windows.html  Guia visual do Windows
 │
 ├── docs/                      ══ COMPARTILHADO ══
-│   ├── 00-DOCUMENTO-MESTRE.md Este arquivo — contém tudo
 │   ├── 01-GUIA-RAPIDO.md      Uma página para levar a campo
-│   ├── 06-TROUBLESHOOTING.md  Soluções de problemas
-│   └── 07-ESTRATEGIA-MULTIPLATAFORMA.md
+│   ├── 02-MANUAL-COMPLETO.md  Este arquivo — contém tudo
+│   ├── 03-SOLUCAO-DE-PROBLEMAS.md  Quando algo não funciona
+│   └── 04-COMO-FUNCIONA-POR-DENTRO.md  Decisões técnicas
 │
 ├── backups/                   HISTÓRICO DE VERSÕES
 │   ├── INDICE.md              Lista de todos os backups

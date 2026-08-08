@@ -1,12 +1,11 @@
 # DLCast — Visão, Decisões e Possibilidades
 
 > Este é o documento do **porquê**. Os outros explicam como usar e como
-> funciona; este registra por que o projeto existe, por que cada escolha foi
-> feita daquele jeito, o que descobrimos no caminho e o que dá para construir
-> a partir daqui.
+> funciona; este registra por que o projeto existe, por que cada escolha
+> técnica foi feita daquele jeito e o que dá para construir a partir daqui.
 >
-> Se alguém pegar este projeto daqui a dois anos — inclusive você — é este
-> arquivo que evita refazer discussões já resolvidas.
+> Serve para quem quer entender o sistema a fundo, adaptá-lo a outro uso ou
+> contribuir com o projeto.
 
 ---
 
@@ -16,10 +15,9 @@
 2. [O problema, em detalhe](#2-o-problema-em-detalhe)
 3. [As decisões técnicas e o porquê de cada uma](#3-as-decisões-técnicas-e-o-porquê-de-cada-uma)
 4. [O que descobrimos construindo](#4-o-que-descobrimos-construindo)
-5. [Erros que cometemos e como foram corrigidos](#5-erros-que-cometemos-e-como-foram-corrigidos)
-6. [Variações: o que dá para fazer com isso](#6-variações-o-que-dá-para-fazer-com-isso)
-7. [O que deliberadamente NÃO fizemos](#7-o-que-deliberadamente-não-fizemos)
-8. [Histórico de evolução](#8-histórico-de-evolução)
+5. [Variações: o que dá para fazer com isso](#5-variações-o-que-dá-para-fazer-com-isso)
+6. [O que deliberadamente NÃO fizemos](#6-o-que-deliberadamente-não-fizemos)
+7. [Histórico de evolução](#7-histórico-de-evolução)
 
 ---
 
@@ -246,22 +244,7 @@ pelo celular: se não abrir, o problema é o roteador.
 
 ---
 
-## 5. Erros que cometemos e como foram corrigidos
-
-Registrado de propósito — errar de novo no mesmo ponto é o desperdício mais
-caro que existe.
-
-| Erro | Sintoma | Correção |
-|---|---|---|
-| Faltou permissão `api` na configuração | Painel e status vazios, "authentication error" | Adicionadas as ações `api` e `metrics` |
-| Painel aberto como arquivo local | Painel abria sem dados | Passou a ser servido por HTTP na porta 8080 |
-| Gravação automática na pasta do projeto | Vídeos acumulando sem o usuário perceber | Gravação virou ação consciente, com escolha de pasta |
-| `djio.ps1` procurava o servidor na raiz | Windows não acharia o `mediamtx.exe` após a reorganização | Corrigido para `windows\mediamtx.exe` |
-| Volume interno do sistema listado como destino | Time Machine aparecia como opção de gravação | Filtro de volumes protegidos e sem permissão de escrita |
-
----
-
-## 6. Variações: o que dá para fazer com isso
+## 5. Variações: o que dá para fazer com isso
 
 O sistema é uma base, não um produto fechado. Algumas direções possíveis, da
 mais simples à mais ambiciosa:
@@ -287,8 +270,12 @@ pasta, inclusive de um HD externo — o caminho natural para voos longos.
 
 **Aplicativo de verdade, em Go.** Um executável único que embute o servidor e
 o painel, com ícone na bandeja do sistema. Elimina pastas e cliques duplos em
-arquivos. É a evolução natural e está detalhada em
-`07-ESTRATEGIA-MULTIPLATAFORMA.md`.
+arquivos. É a evolução natural do projeto.
+
+O caminho mais promissor é **Go**: compila do macOS para Windows num único
+comando, gera um executável de ~15 MB sem dependências, embute o painel HTML
+com `go:embed` — e é a mesma linguagem do MediaMTX, o que abriria a
+possibilidade de embutir o servidor inteiro no mesmo arquivo.
 
 **QR Code no painel.** Em vez de digitar o endereço na tela pequena do
 controle, apontar a câmera e ler. Reduz o erro de digitação, que é uma das
@@ -315,7 +302,7 @@ Aí o custo deixa de ser zero, mas a arquitetura não muda.
 
 ---
 
-## 7. O que deliberadamente NÃO fizemos
+## 6. O que deliberadamente NÃO fizemos
 
 Tão importante quanto o que foi feito.
 
@@ -339,7 +326,7 @@ número honesto e explicado a um número impressionante e errado.
 
 ---
 
-## 8. Histórico de evolução
+## 7. Histórico de evolução
 
 | Versão | O que mudou |
 |---|---|

@@ -114,7 +114,7 @@ restaurar() {
     fi
   done
 
-  for arquivo in CLAUDE.md README.md; do
+  for arquivo in README.md SUPORTE-IA.md; do
     [ -f "$origem/$arquivo" ] && cp "$origem/$arquivo" "./$arquivo" && ok "Restaurado: $arquivo"
   done
 
@@ -171,7 +171,7 @@ criar() {
   # Copia os arquivos soltos da raiz.
   # A pasta windows/ fica de fora de proposito: o mediamtx.exe tem 53 MB e
   # faria cada backup pesar isso, sem necessidade - ele nunca muda.
-  for arquivo in CLAUDE.md README.md .gitignore DLCast.bat; do
+  for arquivo in README.md SUPORTE-IA.md LICENSE COMECE-AQUI.html .gitignore; do
     [ -f "$arquivo" ] && cp "$arquivo" "$destino/" 2>/dev/null
   done
 

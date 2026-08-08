@@ -7,7 +7,7 @@
 De drones e câmeras direto para o seu computador — com menos de 1 segundo de atraso.
 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-3fb950?style=flat-square)](LICENSE)
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.4.0-58a6ff?style=flat-square)](docs/09-VISAO-E-DECISOES.md)
+[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.4.0-58a6ff?style=flat-square)](docs/04-COMO-FUNCIONA-POR-DENTRO.md)
 [![macOS](https://img.shields.io/badge/macOS-12%2B-lightgrey?style=flat-square&logo=apple)](#-instalação)
 [![Windows](https://img.shields.io/badge/Windows-10%2F11-0078d4?style=flat-square&logo=windows)](#-instalação)
 [![Sem instalação](https://img.shields.io/badge/instala%C3%A7%C3%A3o-n%C3%A3o%20precisa-3fb950?style=flat-square)](#-instalação)
@@ -243,7 +243,12 @@ DLCast/
 │   └── instalar-windows.html    guia visual do Windows
 │
 ├── docs/                     ══ compartilhado ══
-│   └── (documentação completa)
+│   ├── 01-GUIA-RAPIDO.md
+│   ├── 02-MANUAL-COMPLETO.md
+│   ├── 03-SOLUCAO-DE-PROBLEMAS.md
+│   └── 04-COMO-FUNCIONA-POR-DENTRO.md
+│
+├── SUPORTE-IA.md                arquivo de diagnóstico para IA
 │
 ├── recordings/                  seus vídeos gravados
 └── logs/                        registros do servidor
@@ -287,13 +292,16 @@ No Windows, o equivalente é `.\windows\djio.ps1 <comando>`.
 
 ## Documentação
 
-| Documento | O que tem |
-|---|---|
-| [**Guia Rápido**](docs/01-GUIA-RAPIDO.md) | Uma página para levar a campo |
-| [**Documento Mestre**](docs/00-DOCUMENTO-MESTRE.md) | Tudo, em detalhe |
-| [**Visão e Decisões**](docs/09-VISAO-E-DECISOES.md) | Por que o projeto existe e por que cada escolha foi feita |
-| [**Solução de Problemas**](docs/06-TROUBLESHOOTING.md) | Quando algo não funciona |
-| [**Resolver com IA**](SUPORTE-IA.md) | Arquivo para colar no ChatGPT/Gemini e resolver sozinho |
+| | Documento | O que tem |
+|:---:|---|---|
+| **01** | [**Guia Rápido**](docs/01-GUIA-RAPIDO.md) | Uma página para levar a campo no dia do voo |
+| **02** | [**Manual Completo**](docs/02-MANUAL-COMPLETO.md) | Tudo em detalhe: arquitetura, protocolos, operação e segurança |
+| **03** | [**Solução de Problemas**](docs/03-SOLUCAO-DE-PROBLEMAS.md) | O método para achar o defeito em 30 segundos |
+| **04** | [**Como Funciona por Dentro**](docs/04-COMO-FUNCIONA-POR-DENTRO.md) | Por que o projeto existe e o raciocínio de cada escolha técnica |
+| 🤖 | [**Resolver com IA**](SUPORTE-IA.md) | Cole no ChatGPT ou Gemini e resolva sozinho |
+
+Todas as páginas também estão em versão navegável dentro do sistema — abra
+**`COMECE-AQUI.html`** e vá em *Documentação*.
 
 ---
 
@@ -330,7 +338,7 @@ Construído sobre software livre, sem dependências de Node, Docker ou banco de 
 | [MediaMTX](https://github.com/bluenviron/mediamtx) | Núcleo de mídia | MIT |
 | [FFmpeg](https://ffmpeg.org) | Retransmissão (opcional) | LGPL/GPL |
 
-**Por que MediaMTX e não SRS ou OvenMediaEngine?** Porque os dois usam AGPL-3.0, que obrigaria cada pessoa que recebesse este projeto a lidar com obrigações jurídicas. A licença MIT não cria obrigação nenhuma. O raciocínio completo está em [Visão e Decisões](docs/09-VISAO-E-DECISOES.md).
+**Por que MediaMTX e não SRS ou OvenMediaEngine?** Porque os dois usam AGPL-3.0, que obrigaria cada pessoa que recebesse este projeto a lidar com obrigações jurídicas. A licença MIT não cria obrigação nenhuma. O raciocínio completo está em [Visão e Decisões](docs/04-COMO-FUNCIONA-POR-DENTRO.md).
 
 ---
 
@@ -409,7 +417,7 @@ Dá inclusive para transmitir para várias plataformas simultaneamente, abrindo 
 
 Por padrão o servidor aceita conexões **apenas da sua rede local**, sem senha — igual a uma impressora Wi-Fi de casa.
 
-Ele **não deve ser exposto à internet** como está. Se você abrir a porta 1935 no roteador, qualquer pessoa poderá transmitir pelo seu servidor. Para esse caso existe configuração de senha, documentada no [Documento Mestre](docs/00-DOCUMENTO-MESTRE.md#12-segurança).
+Ele **não deve ser exposto à internet** como está. Se você abrir a porta 1935 no roteador, qualquer pessoa poderá transmitir pelo seu servidor. Para esse caso existe configuração de senha, documentada no [Documento Mestre](docs/02-MANUAL-COMPLETO.md#12-segurança).
 
 </details>
 
@@ -480,7 +488,7 @@ Termos que aparecem na documentação, explicados sem jargão:
 1. O **microfone** está conectado no controle? (causa nº 1)
 2. O controle está no **mesmo Wi-Fi** que o computador?
 3. Rode `./mac/djio doctor` — ele aponta o problema sozinho
-4. Consulte a [Solução de Problemas](docs/06-TROUBLESHOOTING.md)
+4. Consulte a [Solução de Problemas](docs/03-SOLUCAO-DE-PROBLEMAS.md)
 
 Encontrou um erro no projeto? Abra uma [issue aqui no GitHub](../../issues) — assim a correção ajuda todo mundo.
 

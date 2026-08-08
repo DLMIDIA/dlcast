@@ -14,7 +14,7 @@
 #   ./mac/empacotar.sh
 #
 # Os arquivos gerados sao os que voce anexa em "Releases" no GitHub.
-# Ver docs/08-PUBLICAR-NO-GITHUB.md
+# Anexe os arquivos gerados em "Releases", no GitHub.
 ###############################################################################
 
 set -uo pipefail
@@ -74,9 +74,6 @@ montar_pacote() {
   # botao de copiar funcionar; sem esta copia, o botao cai no plano B.
   cp SUPORTE-IA.md "$temp/src/web/SUPORTE-IA.md" 2>/dev/null
 
-  # Documentacao interna de desenvolvimento nao vai para o usuario final.
-  rm -f "$temp/docs/07-ESTRATEGIA-MULTIPLATAFORMA.md" \
-        "$temp/docs/08-PUBLICAR-NO-GITHUB.md" 2>/dev/null
 
   # --- A pasta do sistema em questao ----------------------------------------
   cp -R "$pasta_sistema" "$temp/" 2>/dev/null
@@ -127,5 +124,5 @@ echo
 ls -lh dist/*.zip 2>/dev/null | awk '{printf "  %-8s %s\n", $5, $9}'
 echo
 info "Anexe estes arquivos em Releases, no GitHub."
-info "Passo a passo: docs/08-PUBLICAR-NO-GITHUB.md"
+info "Crie uma Release em: github.com/DLMIDIA/dlcast/releases/new"
 echo

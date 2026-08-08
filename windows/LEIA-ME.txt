@@ -1,0 +1,74 @@
+===========================================================
+  DLCast - Pasta do Windows
+===========================================================
+
+TUDO O QUE O WINDOWS PRECISA ESTA AQUI DENTRO.
+Nao e preciso copiar, instalar nem configurar nada.
+
+
+COMO USAR
+
+  1. De um clique duplo em "DLCast.bat"
+
+  2. Quando o Windows perguntar sobre o firewall, marque
+     "Redes particulares" e clique em "Permitir acesso"
+
+  3. Digite no DJI Fly o endereco que aparecer na tela
+
+  Pronto. Nao feche a janela preta enquanto transmitir.
+
+
+PRECISA CONFIGURAR ALGUMA COISA?
+
+  Nao. O mediamtx.exe nao abre janela nem tem tela de
+  ajustes. Ele le a configuracao que ja vem pronta em
+  config\mediamtx.yml, com tudo ajustado.
+
+
+O QUE TEM NESTA PASTA
+
+  DLCast.bat .............. clique duplo para ligar o servidor
+  mediamtx.exe ............ o servidor (v1.20.0, ja incluso)
+  djio.ps1 ................ comandos avancados no PowerShell
+  LEIA-ME.txt ............. este arquivo
+  LICENSE-mediamtx.txt .... licenca do MediaMTX (MIT)
+
+
+E O FFMPEG E O PYTHON?
+
+  Sao OPCIONAIS. O sistema recebe o video do drone e grava
+  sem eles.
+
+  FFmpeg - so para retransmitir ao YouTube/Facebook
+           winget install Gyan.FFmpeg
+
+  Python - so para o painel visual com estatisticas
+           winget install Python.Python.3.12
+
+
+INSTRUCOES COMPLETAS, COM IMAGENS
+
+  Volte para a pasta principal e abra COMECE-AQUI.html
+
+
+ATUALIZAR O SERVIDOR
+
+  A versao aqui e a estavel testada em voo real. Se quiser
+  a mais nova:
+  https://github.com/bluenviron/mediamtx/releases/latest
+
+  Baixe o arquivo terminado em windows_amd64.zip,
+  descompacte e substitua o mediamtx.exe desta pasta.
+
+
+LEMBRETES DO DRONE
+
+  1. O controle precisa estar no MESMO Wi-Fi que o PC
+  2. E OBRIGATORIO ter microfone conectado no controle,
+     senao o botao de iniciar nao funciona (DJI Fly 1.16+)
+  3. O controle RC 2 transmite no maximo em 720p
+
+===========================================================
+  DLCast - por Daniel Junior - DL Midia
+  Projeto gratuito
+===========================================================

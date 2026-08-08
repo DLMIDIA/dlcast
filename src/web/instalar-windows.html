@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast — Instalação no Windows</title>
+<style>
+  :root {
+    --fundo:#0d1117; --cartao:#161b22; --fundo2:#0b0f14; --borda:#30363d;
+    --texto:#e6edf3; --suave:#8b949e; --verde:#3fb950; --vermelho:#f85149;
+    --amarelo:#d29922; --azul:#58a6ff; --roxo:#bc8cff;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--fundo); color:var(--texto); line-height:1.7;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    padding:28px 16px 70px;
+  }
+  .container { max-width:840px; margin:0 auto; }
+
+  nav { display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+        margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--borda); }
+  nav a { color:var(--suave); text-decoration:none; font-size:13.5px; font-weight:600;
+          padding:8px 16px; border-radius:8px; border:1px solid transparent; }
+  nav a:hover { color:var(--texto); background:var(--cartao); }
+  nav a.ativo { color:var(--azul); border-color:var(--borda); background:var(--cartao); }
+
+  .topo { text-align:center; margin-bottom:34px; }
+  .topo .logo { font-size:38px; font-weight:800; letter-spacing:-1.5px; margin-bottom:8px; }
+  .topo .logo .dl { color:var(--azul); }
+  .topo h1 { font-size:21px; font-weight:700; margin-bottom:8px; }
+  .topo p { color:var(--suave); font-size:15px; max-width:520px; margin:0 auto; }
+
+  .tempo {
+    display:inline-block; margin-top:16px; padding:7px 18px;
+    background:rgba(63,185,80,.13); border:1px solid rgba(63,185,80,.35);
+    color:var(--verde); border-radius:999px; font-size:13px; font-weight:700;
+  }
+
+  /* ---------- Resposta rápida ---------- */
+  .destaque {
+    background:linear-gradient(135deg, rgba(88,166,255,.1), rgba(188,140,255,.07));
+    border:1px solid rgba(88,166,255,.28);
+    border-radius:14px; padding:24px; margin-bottom:32px;
+  }
+  .destaque h2 { font-size:17px; margin-bottom:10px; }
+  .destaque p { font-size:14.5px; margin-bottom:10px; }
+  .destaque p:last-child { margin-bottom:0; }
+
+  /* ---------- Passos ---------- */
+  .passo {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:14px; padding:24px; margin-bottom:18px; position:relative;
+  }
+  .passo-topo { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .passo-num {
+    width:34px; height:34px; border-radius:50%; background:var(--azul); color:#04121f;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:15px; flex-shrink:0;
+  }
+  .passo-tit { font-size:18px; font-weight:700; }
+  .passo-sub { font-size:12.5px; color:var(--suave); font-weight:600; }
+  .passo p { font-size:14.5px; margin-bottom:12px; }
+  .passo p:last-child { margin-bottom:0; }
+
+  .opcional .passo-num { background:var(--suave); }
+
+  code, .caminho {
+    background:var(--fundo2); padding:3px 8px; border-radius:5px;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:13px; color:var(--verde);
+  }
+  pre {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:9px;
+    padding:14px 16px; overflow-x:auto; margin:12px 0;
+  }
+  pre code { background:none; padding:0; font-size:13px; }
+
+  .botao {
+    display:inline-block; background:var(--azul); color:#04121f;
+    padding:12px 24px; border-radius:9px; text-decoration:none;
+    font-weight:700; font-size:14.5px; margin-top:6px; border:none; cursor:pointer;
+    font-family:inherit;
+  }
+  .botao:hover { opacity:.87; }
+  .botao.secundario { background:transparent; color:var(--texto); border:1px solid var(--borda); }
+
+  .duas-opcoes { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:14px; }
+  .opcao {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:11px; padding:18px;
+  }
+  .opcao.destaque-verde { border-color:rgba(63,185,80,.45); background:rgba(63,185,80,.07); }
+  .opcao .tit { font-size:14.5px; font-weight:700; margin-bottom:5px; }
+  .opcao .desc { font-size:12.5px; color:var(--suave); margin-bottom:12px; }
+  .selo-recomendado {
+    display:inline-block; background:var(--verde); color:#04121f;
+    font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px;
+    text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px;
+  }
+
+  .aviso {
+    background:rgba(210,153,34,.12); border-left:3px solid var(--amarelo);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:14px; color:#e3c07b;
+  }
+  .nota {
+    background:rgba(88,166,255,.1); border-left:3px solid var(--azul);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:14px; color:#a9d1ff;
+  }
+  .critico {
+    background:rgba(248,81,73,.12); border-left:3px solid var(--vermelho);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:14px; color:#ffb3ae;
+  }
+
+  h2.secao { font-size:13px; text-transform:uppercase; letter-spacing:1.4px;
+             color:var(--azul); font-weight:800; margin:34px 0 14px; }
+
+  table.est { width:100%; border-collapse:collapse; font-size:13.5px; margin-top:12px; }
+  table.est td, table.est th { padding:10px 8px; border-bottom:1px solid var(--borda); text-align:left; }
+  table.est th { color:var(--suave); font-size:11px; text-transform:uppercase; letter-spacing:.8px; }
+
+  .arvore {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:9px;
+    padding:16px; font-family:ui-monospace,Menlo,monospace; font-size:13px;
+    line-height:1.8; overflow-x:auto; margin-top:12px;
+  }
+  .arvore .destaque-linha { color:var(--verde); font-weight:700; }
+
+  footer { text-align:center; color:var(--suave); font-size:12.5px;
+           margin-top:44px; padding-top:22px; border-top:1px solid var(--borda); line-height:2; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav>
+    <a href="index.html">Comece por aqui</a>
+    <a href="painel.html">Painel de controle</a>
+    <a href="instalar-windows.html" class="ativo">Instalar no Windows</a>
+    <a href="sobre.html">Sobre</a>
+  </nav>
+
+  <div class="topo">
+    <div class="logo"><span class="dl">DL</span>Cast</div>
+    <h1>Instalação no Windows</h1>
+    <p>Passo a passo completo. Os arquivos já vêm na pasta — você não precisa
+       caçar download em site nenhum.</p>
+    <div class="tempo">Leva cerca de 5 minutos</div>
+  </div>
+
+  <!-- ================= RESPOSTA RÁPIDA ================= -->
+  <div class="destaque">
+    <h2>Preciso configurar alguma coisa dentro dos programas?</h2>
+    <p>
+      <strong>Não.</strong> Nenhum dos programas tem tela de configuração para
+      você mexer. O MediaMTX não abre janela — ele lê o arquivo de configuração
+      que já vem pronto dentro do DLCast, com tudo ajustado.
+    </p>
+    <p>
+      Na prática você faz três coisas: <strong>copiar um arquivo para a pasta
+      certa</strong>, <strong>dar um clique duplo</strong> e
+      <strong>autorizar o firewall na primeira vez</strong>. Só isso.
+    </p>
+  </div>
+
+  <!-- ================= PASSO 1 ================= -->
+  <div class="passo">
+    <div class="passo-topo">
+      <div class="passo-num">1</div>
+      <div>
+        <div class="passo-tit">Abra a pasta windows</div>
+        <div class="passo-sub">obrigatório · 10 segundos</div>
+      </div>
+    </div>
+    <p>
+      Dentro da pasta do DLCast existe uma pasta chamada <code>windows</code>.
+      <strong>Tudo o que o Windows precisa está lá dentro</strong> — inclusive
+      o servidor, já baixado e pronto.
+    </p>
+    <p>
+      Você <strong>não precisa copiar, instalar nem configurar nada</strong>.
+      É só abrir essa pasta.
+    </p>
+
+    <div class="arvore">
+DLCast\<br>
+├── COMECE-AQUI.html<br>
+├── config\<br>
+├── src\<br>
+├── mac\           <span style="color:var(--suave)">← ignore, é do Mac</span><br>
+└── <span class="destaque-linha">windows\        ← abra esta</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="destaque-linha">DLCast.bat</span>  <span style="color:var(--suave)">← o clique duplo é aqui</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── mediamtx.exe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── LEIA-ME.txt
+    </div>
+
+    <div class="duas-opcoes">
+      <div class="opcao destaque-verde">
+        <div class="selo-recomendado">Recomendado</div>
+        <div class="tit">Use o arquivo da pasta</div>
+        <div class="desc">
+          Versão 1.20.0, a mesma que foi testada com o drone neste projeto.
+          Já está baixada e pronta.
+        </div>
+      </div>
+      <div class="opcao">
+        <div class="tit">Ou baixe a versão mais nova</div>
+        <div class="desc">
+          Se preferir a última versão publicada. Baixe o arquivo terminado em
+          <code>windows_amd64.zip</code> e descompacte.
+        </div>
+        <a class="botao secundario" target="_blank"
+           href="https://github.com/bluenviron/mediamtx/releases/latest">
+          Abrir página oficial
+        </a>
+      </div>
+    </div>
+
+    <div class="nota">
+      A versão que vem na pasta é a <strong>estável testada</strong>. Versões
+      mais novas costumam funcionar, mas só a 1.20.0 foi validada em voo real
+      com o DJI Air 3.
+    </div>
+  </div>
+
+  <!-- ================= PASSO 2 ================= -->
+  <div class="passo">
+    <div class="passo-topo">
+      <div class="passo-num">2</div>
+      <div>
+        <div class="passo-tit">Ligue o servidor</div>
+        <div class="passo-sub">obrigatório · 10 segundos</div>
+      </div>
+    </div>
+    <p>
+      Dentro da pasta <code>windows</code>, dê um <strong>clique duplo</strong>
+      no arquivo <code>DLCast.bat</code>.
+    </p>
+    <p>
+      Vai abrir uma janela preta com o endereço do seu servidor escrito nela.
+      Essa janela precisa ficar aberta enquanto você usa — é o servidor
+      rodando. Para desligar, é só fechá-la.
+    </p>
+
+    <div class="critico">
+      <strong>O Windows vai perguntar sobre o firewall.</strong> Aparece uma
+      janela azul perguntando se o programa pode aceitar conexões.
+      <br><br>
+      Marque <strong>"Redes particulares"</strong> e clique em
+      <strong>Permitir acesso</strong>.
+      <br><br>
+      Se você clicar em cancelar, o drone não vai conseguir se conectar e o erro
+      não deixa pista nenhuma — é o problema número 1 no Windows.
+    </div>
+  </div>
+
+  <!-- ================= PASSO 3 ================= -->
+  <div class="passo">
+    <div class="passo-topo">
+      <div class="passo-num">3</div>
+      <div>
+        <div class="passo-tit">Configure o drone</div>
+        <div class="passo-sub">obrigatório · 2 minutos</div>
+      </div>
+    </div>
+    <p>
+      A janela preta mostra um endereço parecido com este:
+    </p>
+    <pre><code>rtmp://192.168.1.100:1935/drone</code></pre>
+    <p>
+      Digite esse endereço no DJI Fly, em
+      <strong>Transmissão → Plataformas de Transmissão ao Vivo → RTMP</strong>.
+    </p>
+    <div class="aviso">
+      <strong>Não esqueça o microfone.</strong> A partir do DJI Fly v1.16.0, o
+      controle RC 2 exige um microfone conectado no USB-C para deixar iniciar a
+      transmissão. Sem ele, o botão simplesmente não responde.
+    </div>
+  </div>
+
+  <!-- ================= PASSO 4 (OPCIONAL) ================= -->
+  <div class="passo opcional">
+    <div class="passo-topo">
+      <div class="passo-num">4</div>
+      <div>
+        <div class="passo-tit">FFmpeg</div>
+        <div class="passo-sub">opcional · só se quiser retransmitir</div>
+      </div>
+    </div>
+    <p>
+      <strong>Pule este passo se você só quer receber e gravar o vídeo do
+      drone.</strong> O sistema funciona completo sem o FFmpeg: recebe,
+      grava, e você assiste no painel.
+    </p>
+    <p>O FFmpeg só é necessário para duas coisas:</p>
+    <table class="est">
+      <tr><td>Retransmitir para YouTube, Facebook, Twitch</td></tr>
+      <tr><td>Gerar vídeo de teste sem usar o drone</td></tr>
+    </table>
+    <p style="margin-top:14px">
+      Não incluímos ele na pasta porque ocupa mais de 100 MB — deixaria o
+      DLCast quatro vezes maior por um recurso que muita gente não usa.
+    </p>
+
+    <div class="duas-opcoes">
+      <div class="opcao destaque-verde">
+        <div class="selo-recomendado">Mais fácil</div>
+        <div class="tit">Pelo winget</div>
+        <div class="desc">
+          Abra o PowerShell e rode este comando. O Windows baixa e instala
+          sozinho.
+        </div>
+        <pre style="margin:0"><code>winget install Gyan.FFmpeg</code></pre>
+      </div>
+      <div class="opcao">
+        <div class="tit">Ou baixe manualmente</div>
+        <div class="desc">
+          Baixe, descompacte e adicione a pasta <code>bin</code> ao PATH do
+          Windows.
+        </div>
+        <a class="botao secundario" target="_blank"
+           href="https://www.gyan.dev/ffmpeg/builds/">
+          Abrir site oficial
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PASSO 5 (OPCIONAL) ================= -->
+  <div class="passo opcional">
+    <div class="passo-topo">
+      <div class="passo-num">5</div>
+      <div>
+        <div class="passo-tit">Python</div>
+        <div class="passo-sub">opcional · só para o painel visual</div>
+      </div>
+    </div>
+    <p>
+      O painel com vídeo ao vivo e estatísticas precisa do Python para
+      funcionar. O servidor em si <strong>não precisa</strong> — o drone
+      transmite e grava normalmente sem ele.
+    </p>
+    <pre><code>winget install Python.Python.3.12</code></pre>
+    <div class="nota">
+      Se você não quiser instalar o Python, ainda dá para assistir ao vídeo
+      abrindo direto no navegador o endereço que a janela preta mostra, na
+      porta <strong>8889</strong>.
+    </div>
+  </div>
+
+  <!-- ================= RESUMO ================= -->
+  <h2 class="secao">Resumo do que é obrigatório</h2>
+  <div class="passo">
+    <table class="est">
+      <tr>
+        <th>Programa</th><th>Tamanho</th><th>Precisa?</th><th>Para quê</th>
+      </tr>
+      <tr>
+        <td><strong>MediaMTX</strong></td>
+        <td>53 MB</td>
+        <td style="color:var(--verde);font-weight:700">Sim</td>
+        <td>É o servidor. Já vem na pasta.</td>
+      </tr>
+      <tr>
+        <td>FFmpeg</td>
+        <td>~100 MB</td>
+        <td style="color:var(--suave)">Não</td>
+        <td>Só para retransmitir ao YouTube</td>
+      </tr>
+      <tr>
+        <td>Python</td>
+        <td>~25 MB</td>
+        <td style="color:var(--suave)">Não</td>
+        <td>Só para o painel visual</td>
+      </tr>
+    </table>
+    <div class="nota">
+      Ou seja: para receber o vídeo do drone e gravar, basta
+      <strong>um arquivo que já está na pasta</strong>. O resto é conforto.
+    </div>
+  </div>
+
+  <!-- ================= PROBLEMAS ================= -->
+  <h2 class="secao">Se der problema</h2>
+  <div class="passo">
+    <p><strong>O drone diz "falha ao conectar"</strong></p>
+    <p style="color:var(--suave); font-size:14px">
+      Quase sempre é o firewall. Vá em Configurações do Windows → Firewall →
+      Permitir um aplicativo, e confirme que o <code>mediamtx.exe</code> está
+      liberado em "Particular". Verifique também se o controle está no mesmo
+      Wi-Fi que o computador.
+    </p>
+
+    <p style="margin-top:18px"><strong>A janela preta abre e fecha na hora</strong></p>
+    <p style="color:var(--suave); font-size:14px">
+      Significa que a pasta está incompleta — normalmente o
+      <code>mediamtx.exe</code> foi apagado, ou a pasta <code>windows</code>
+      foi separada do resto do projeto. Copie a pasta DLCast inteira de novo.
+    </p>
+
+    <p style="margin-top:18px"><strong>O botão de transmitir não funciona no controle</strong></p>
+    <p style="color:var(--suave); font-size:14px">
+      É o microfone. O DJI Fly v1.16.0+ exige um conectado no USB-C do RC 2.
+    </p>
+  </div>
+
+  <footer>
+    <strong>DLCast</strong> · por Daniel Júnior · DL Mídia<br>
+    Projeto gratuito. O vídeo nunca sai da sua rede, a menos que você mande.
+  </footer>
+</div>
+</body>
+</html>

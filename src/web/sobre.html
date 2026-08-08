@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast — Sobre o projeto</title>
+<style>
+  :root {
+    --fundo:#0d1117; --cartao:#161b22; --fundo2:#0b0f14; --borda:#30363d;
+    --texto:#e6edf3; --suave:#8b949e; --verde:#3fb950; --azul:#58a6ff;
+    --amarelo:#d29922; --roxo:#bc8cff;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--fundo); color:var(--texto); line-height:1.7;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    padding:28px 16px 70px;
+  }
+  .container { max-width:860px; margin:0 auto; }
+
+  /* ---------- Navegação ---------- */
+  nav {
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    margin-bottom:34px; padding-bottom:20px; border-bottom:1px solid var(--borda);
+  }
+  nav a {
+    color:var(--suave); text-decoration:none; font-size:13.5px; font-weight:600;
+    padding:8px 16px; border-radius:8px; border:1px solid transparent;
+  }
+  nav a:hover { color:var(--texto); background:var(--cartao); }
+  nav a.ativo { color:var(--azul); border-color:var(--borda); background:var(--cartao); }
+
+  /* ---------- Marca ---------- */
+  .marca { text-align:center; margin-bottom:40px; }
+  .logo {
+    font-size:46px; font-weight:800; letter-spacing:-2px; line-height:1;
+    margin-bottom:10px;
+  }
+  .logo .dl { color:var(--azul); }
+  .logo .cast { color:var(--texto); }
+  .tagline { color:var(--suave); font-size:16px; max-width:520px; margin:0 auto; }
+
+  .selo {
+    display:inline-block; margin-top:18px; padding:7px 18px;
+    background:rgba(63,185,80,.13); border:1px solid rgba(63,185,80,.35);
+    color:var(--verde); border-radius:999px; font-size:13px; font-weight:700;
+  }
+
+  /* ---------- Blocos ---------- */
+  section { margin-bottom:38px; }
+  h2 {
+    font-size:13px; text-transform:uppercase; letter-spacing:1.4px;
+    color:var(--azul); font-weight:800; margin-bottom:14px;
+  }
+  h3 { font-size:20px; margin-bottom:10px; }
+  p { margin-bottom:14px; font-size:15px; }
+  p:last-child { margin-bottom:0; }
+
+  .cartao {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:14px; padding:26px;
+  }
+
+  .destaque {
+    background:linear-gradient(135deg, rgba(88,166,255,.1), rgba(188,140,255,.07));
+    border:1px solid rgba(88,166,255,.28);
+    border-radius:14px; padding:26px;
+  }
+
+  /* ---------- Nome ---------- */
+  .anatomia { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:18px; }
+  .peca { background:var(--fundo2); border:1px solid var(--borda); border-radius:11px; padding:18px; }
+  .peca .silaba { font-size:26px; font-weight:800; margin-bottom:6px; }
+  .peca .silaba.a { color:var(--azul); }
+  .peca .silaba.b { color:var(--texto); }
+  .peca p { font-size:13.5px; color:var(--suave); margin:0; }
+
+  /* ---------- Perfil ---------- */
+  .perfil { display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; }
+  .avatar {
+    width:82px; height:82px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg, var(--azul), var(--roxo));
+    display:flex; align-items:center; justify-content:center;
+    font-size:31px; font-weight:800; color:#04121f;
+  }
+  .perfil-info { flex:1; min-width:230px; }
+  .perfil-info .nome { font-size:21px; font-weight:800; }
+  .perfil-info .cargo { color:var(--azul); font-size:13.5px; font-weight:700; margin-bottom:10px; }
+
+  /* ---------- Serviços ---------- */
+  .servicos { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-top:16px; }
+  .servico {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:10px;
+    padding:15px; text-align:center;
+  }
+  .servico .ic { font-size:23px; margin-bottom:6px; }
+  .servico .tit { font-size:13.5px; font-weight:700; }
+
+  /* ---------- Listas ---------- */
+  ul.pontos { list-style:none; }
+  ul.pontos li { position:relative; padding-left:26px; margin-bottom:11px; font-size:15px; }
+  ul.pontos li::before {
+    content:'✓'; position:absolute; left:0; top:0;
+    color:var(--verde); font-weight:800;
+  }
+
+  /* ---------- Contato ---------- */
+  .contato {
+    display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:20px;
+  }
+  .contato a {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:9px;
+    padding:11px 20px; color:var(--texto); text-decoration:none;
+    font-size:14px; font-weight:600;
+  }
+  .contato a:hover { border-color:var(--azul); color:var(--azul); }
+
+  table.ficha { width:100%; border-collapse:collapse; font-size:14px; }
+  table.ficha td { padding:11px 0; border-bottom:1px solid var(--borda); }
+  table.ficha td:first-child { color:var(--suave); width:38%; }
+  table.ficha tr:last-child td { border-bottom:0; }
+
+  footer {
+    text-align:center; color:var(--suave); font-size:12.5px;
+    margin-top:44px; padding-top:22px; border-top:1px solid var(--borda); line-height:2;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav>
+    <a href="index.html">Comece por aqui</a>
+    <a href="painel.html">Painel de controle</a>
+    <a href="instalar-windows.html">Instalar no Windows</a>
+    <a href="sobre.html" class="ativo">Sobre</a>
+  </nav>
+
+  <div class="marca">
+    <div class="logo"><span class="dl">DL</span><span class="cast">Cast</span></div>
+    <div class="tagline">
+      Seu próprio estúdio de transmissão ao vivo, rodando na sua rede.
+      De drones e câmeras direto para o seu computador.
+    </div>
+    <div class="selo">Projeto gratuito e aberto</div>
+  </div>
+
+  <!-- ================= O NOME ================= -->
+  <section>
+    <h2>A marca</h2>
+    <div class="cartao">
+      <h3>Por que DLCast</h3>
+      <p>
+        O nome junta a origem e a função: a assinatura da <strong>DL Mídia</strong>
+        com aquilo que a ferramenta faz — transmitir.
+      </p>
+
+      <div class="anatomia">
+        <div class="peca">
+          <div class="silaba a">DL</div>
+          <p>De <strong>DL Mídia</strong>, a agência que desenvolve e mantém o
+             projeto. Carrega a assinatura de quem construiu.</p>
+        </div>
+        <div class="peca">
+          <div class="silaba b">Cast</div>
+          <p>De <em>broadcast</em>, transmitir. Um termo que qualquer pessoa
+             da área reconhece, em qualquer idioma.</p>
+        </div>
+      </div>
+
+      <p style="margin-top:20px">
+        A escolha também evita um erro comum: o nome não menciona drone. Como o
+        sistema recebe vídeo de câmeras profissionais, celulares e softwares de
+        produção, um nome preso a drones envelheceria rápido e limitaria o
+        alcance da ferramenta.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= O PROJETO ================= -->
+  <section>
+    <h2>O projeto</h2>
+    <div class="cartao">
+      <h3>O que o DLCast resolve</h3>
+      <p>
+        Quem transmite direto de um drone para o YouTube enfrenta três
+        problemas: a imagem chega ao espectador com 10 a 30 segundos de atraso,
+        o que fica gravado é a versão recomprimida da plataforma, e só é
+        possível transmitir para um destino por vez.
+      </p>
+      <p>
+        O DLCast coloca o seu computador no meio desse caminho. O vídeo chega
+        primeiro em você — íntegro, com menos de um segundo de atraso — e só
+        então segue para onde você decidir. Ou para lugar nenhum, se a
+        transmissão for interna.
+      </p>
+
+      <ul class="pontos" style="margin-top:18px">
+        <li>Menos de 1 segundo de atraso na rede local</li>
+        <li>Gravação do vídeo original, sem perda de qualidade</li>
+        <li>Retransmissão para YouTube, Facebook, Twitch e Instagram ao mesmo tempo</li>
+        <li>Funciona sem internet, usando apenas a rede local</li>
+        <li>Recebe de drones DJI, câmeras profissionais, celulares e OBS</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= GRATUITO ================= -->
+  <section>
+    <h2>Licença e uso</h2>
+    <div class="destaque">
+      <h3>Gratuito, para sempre</h3>
+      <p>
+        O DLCast é distribuído livremente. Pode usar, copiar, modificar e
+        repassar para quem quiser — inclusive em trabalhos comerciais, sem
+        pedir autorização e sem pagar nada.
+      </p>
+      <p>
+        A escolha das tecnologias levou isso em conta desde o começo. O núcleo
+        de mídia usa licença MIT justamente por não impor obrigações a quem
+        recebe o projeto. Ninguém herda amarras jurídicas ao instalar.
+      </p>
+      <p style="color:var(--suave); font-size:14px">
+        Se o projeto te ajudou, o retorno que importa é compartilhar com outro
+        piloto ou produtor que esteja com a mesma dificuldade.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= O AUTOR ================= -->
+  <section>
+    <h2>Quem faz</h2>
+    <div class="cartao">
+      <div class="perfil">
+        <div class="avatar">DJ</div>
+        <div class="perfil-info">
+          <div class="nome">Daniel Júnior</div>
+          <div class="cargo">Fundador do projeto · DL Mídia</div>
+          <p style="font-size:14.5px">
+            Idealizou o DLCast a partir de uma necessidade real de trabalho:
+            transmitir imagens de drone com qualidade e sem o atraso das
+            plataformas. O que começou como uma solução para uso próprio virou
+            uma ferramenta pensada para ser replicada por outras pessoas.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= A EMPRESA ================= -->
+  <section>
+    <h2>A empresa</h2>
+    <div class="cartao">
+      <h3>DL Mídia</h3>
+      <p>
+        Agência de marketing e soluções para internet, atendendo clientes de
+        todos os portes e segmentos. A atuação combina a parte digital com a
+        produção audiovisual em campo.
+      </p>
+
+      <div class="servicos">
+        <div class="servico"><div class="ic">📈</div><div class="tit">Marketing</div></div>
+        <div class="servico"><div class="ic">🌐</div><div class="tit">Soluções web</div></div>
+        <div class="servico"><div class="ic">🗺️</div><div class="tit">Mapeamento</div></div>
+        <div class="servico"><div class="ic">🎬</div><div class="tit">Filmagem</div></div>
+        <div class="servico"><div class="ic">📹</div><div class="tit">Captação</div></div>
+      </div>
+
+      <p style="margin-top:20px; color:var(--suave); font-size:14px">
+        É dessa combinação que nasce o DLCast: uma ferramenta criada por quem
+        opera drone e câmera no dia a dia, resolvendo um problema que aparece
+        no trabalho de verdade — não uma ideia de laboratório.
+      </p>
+
+      <div class="contato">
+        <a href="mailto:contato@dlmidia.com.br">contato@dlmidia.com.br</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FICHA TÉCNICA ================= -->
+  <section>
+    <h2>Ficha técnica</h2>
+    <div class="cartao">
+      <table class="ficha">
+        <tr><td>Versão</td><td>0.3.0</td></tr>
+        <tr><td>Núcleo de mídia</td><td>MediaMTX (licença MIT)</td></tr>
+        <tr><td>Processamento</td><td>FFmpeg</td></tr>
+        <tr><td>Protocolo de entrada</td><td>RTMP</td></tr>
+        <tr><td>Saídas</td><td>WebRTC, HLS, RTSP, SRT</td></tr>
+        <tr><td>Sistemas</td><td>macOS e Windows</td></tr>
+        <tr><td>Equipamentos</td><td>Drones DJI, câmeras com RTMP, OBS, celular</td></tr>
+        <tr><td>Custo</td><td>Gratuito</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <strong>DLCast</strong> · desenvolvido por Daniel Júnior · DL Mídia<br>
+    Projeto gratuito. O vídeo nunca sai da sua rede, a menos que você mande.
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# ============================================================================
+# DLCast - o que NAO vai para o GitHub
+#
+# ATENCAO: o Git nao aceita comentario no fim da linha. Escrever
+# "logs/   # registros" faz o padrao virar "logs/   # registros", que nao
+# casa com nada e deixa os arquivos subirem. Todo comentario fica em
+# linha propria, como abaixo.
+# ============================================================================
+
+# --- Conteudo gerado pelo uso -----------------------------------------------
+# Seus videos gravados. Podem conter material de cliente.
+recordings/
+
+# Registros do servidor, so fazem sentido na sua maquina.
+logs/
+
+# Gerado por maquina: contem os caminhos de pasta do SEU computador.
+src/web/ambiente.json
+
+# Pacotes gerados pelo empacotar.sh (vao para Releases, nao para o repo).
+dist/
+
+# --- Historico interno de desenvolvimento -----------------------------------
+# Os backups sao a rede de seguranca do SEU computador, nao do repositorio.
+# O Git ja e o historico de versoes de quem clonar o projeto.
+backups/
+
+# --- Binarios de terceiros (~160 MB) ----------------------------------------
+# Nao devem entrar no repositorio: deixariam o clone lento para todo mundo.
+# Publique-os na secao "Releases" do GitHub, que existe exatamente para isso.
+mac/mediamtx-arm64
+mac/mediamtx-intel
+windows/mediamtx.exe
+
+# --- Certificados gerados sozinhos pelo servidor ----------------------------
+auto.key
+auto.crt
+
+# --- Sistema ----------------------------------------------------------------
+.DS_Store
+Thumbs.db

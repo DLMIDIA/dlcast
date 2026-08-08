@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast — Comece Aqui</title>
+<style>
+  :root {
+    --fundo:#0d1117; --cartao:#161b22; --fundo2:#0b0f14; --borda:#30363d;
+    --texto:#e6edf3; --suave:#8b949e; --verde:#3fb950; --vermelho:#f85149;
+    --amarelo:#d29922; --azul:#58a6ff; --roxo:#bc8cff;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--fundo); color:var(--texto); line-height:1.7;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    padding:34px 16px 70px;
+  }
+  .container { max-width:880px; margin:0 auto; }
+
+  /* ---------- Topo ---------- */
+  .topo { text-align:center; margin-bottom:38px; }
+  .logo { font-size:52px; font-weight:800; letter-spacing:-2.5px; line-height:1; margin-bottom:12px; }
+  .logo .dl { color:var(--azul); }
+  .topo .lema { color:var(--suave); font-size:16.5px; max-width:540px; margin:0 auto 6px; }
+  .topo .autor { color:var(--suave); font-size:13px; opacity:.75; }
+
+  /* ---------- Detecção ---------- */
+  .detectado {
+    background:linear-gradient(135deg, rgba(88,166,255,.13), rgba(188,140,255,.08));
+    border:1px solid rgba(88,166,255,.35);
+    border-radius:16px; padding:28px; margin-bottom:26px; text-align:center;
+  }
+  .detectado .rotulo {
+    font-size:11.5px; text-transform:uppercase; letter-spacing:1.3px;
+    color:var(--suave); font-weight:700; margin-bottom:8px;
+  }
+  .detectado .sistema { font-size:27px; font-weight:800; margin-bottom:6px; }
+  .detectado .sistema .ic { margin-right:8px; }
+  .detectado p { color:var(--suave); font-size:14.5px; margin-bottom:18px; }
+
+  .botao-grande {
+    display:inline-block; background:var(--azul); color:#04121f;
+    padding:15px 34px; border-radius:11px; text-decoration:none;
+    font-weight:800; font-size:16px; border:none; cursor:pointer;
+    font-family:inherit; transition:opacity .15s;
+  }
+  .botao-grande:hover { opacity:.87; }
+
+  /* ---------- Escolha manual ---------- */
+  h2.secao {
+    font-size:12px; text-transform:uppercase; letter-spacing:1.4px;
+    color:var(--azul); font-weight:800; margin:34px 0 14px; text-align:center;
+  }
+
+  .sistemas { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:18px; }
+  .sistema-card {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:15px; padding:26px; transition:border-color .16s;
+  }
+  .sistema-card:hover { border-color:var(--azul); }
+  .sistema-card .icone { font-size:38px; margin-bottom:10px; }
+  .sistema-card h3 { font-size:21px; margin-bottom:4px; }
+  .sistema-card .resumo { color:var(--suave); font-size:13.5px; margin-bottom:18px; }
+
+  ol.passos { list-style:none; counter-reset:p; margin-bottom:20px; }
+  ol.passos li {
+    counter-increment:p; position:relative;
+    padding:0 0 13px 34px; font-size:14px;
+  }
+  ol.passos li::before {
+    content:counter(p); position:absolute; left:0; top:1px;
+    width:23px; height:23px; background:var(--azul); color:#04121f;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800;
+  }
+  ol.passos code {
+    background:var(--fundo2); padding:2px 7px; border-radius:5px;
+    font-family:ui-monospace,Menlo,monospace; font-size:12.5px; color:var(--verde);
+  }
+
+  .botao {
+    display:block; text-align:center; background:var(--azul); color:#04121f;
+    padding:12px; border-radius:9px; text-decoration:none;
+    font-weight:700; font-size:14.5px;
+  }
+  .botao:hover { opacity:.87; }
+  .botao.secundario { background:transparent; color:var(--texto); border:1px solid var(--borda); }
+
+  /* ---------- Estrutura de pastas ---------- */
+  .arvore {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:11px;
+    padding:20px; font-family:ui-monospace,Menlo,monospace; font-size:13px;
+    line-height:2; overflow-x:auto;
+  }
+  .arvore .mac  { color:var(--verde); font-weight:700; }
+  .arvore .win  { color:var(--azul); font-weight:700; }
+  .arvore .comum{ color:var(--roxo); font-weight:700; }
+  .arvore .nota { color:var(--suave); font-weight:400; }
+
+  .legenda { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-top:16px; font-size:12.5px; }
+  .legenda span { display:flex; align-items:center; gap:6px; color:var(--suave); }
+  .ponto { width:10px; height:10px; border-radius:3px; }
+
+  .nota-caixa {
+    background:rgba(88,166,255,.1); border-left:3px solid var(--azul);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:16px; color:#a9d1ff;
+  }
+  .aviso {
+    background:rgba(210,153,34,.12); border-left:3px solid var(--amarelo);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:16px; color:#e3c07b;
+  }
+
+  .cartao {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:15px; padding:26px;
+  }
+
+  table.req { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.req th, table.req td { padding:10px 8px; border-bottom:1px solid var(--borda); text-align:left; }
+  table.req th { color:var(--suave); font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; }
+  table.req tr:last-child td { border-bottom:0; }
+  .sim { color:var(--verde); font-weight:700; }
+  .nao { color:var(--suave); }
+
+  footer {
+    text-align:center; color:var(--suave); font-size:12.5px;
+    margin-top:44px; padding-top:22px; border-top:1px solid var(--borda); line-height:2;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topo">
+    <div class="logo"><span class="dl">DL</span>Cast</div>
+    <p class="lema">
+      Seu próprio estúdio de transmissão ao vivo. De drones e câmeras direto
+      para o seu computador, com menos de 1 segundo de atraso.
+    </p>
+    <p class="autor">por Daniel Júnior · DL Mídia · projeto gratuito</p>
+  </div>
+
+  <!-- ============ SISTEMA DETECTADO ============ -->
+  <div class="detectado" id="detectado">
+    <div class="rotulo">Detectamos que você está usando</div>
+    <div class="sistema" id="nome-sistema">…</div>
+    <p id="texto-sistema">Carregando…</p>
+    <a class="botao-grande" id="botao-sistema" href="#">Ver instruções</a>
+  </div>
+
+  <!-- ============ OS DOIS CAMINHOS ============ -->
+  <h2 class="secao">Ou escolha o seu sistema</h2>
+
+  <div class="sistemas">
+
+    <!-- ---------- MAC ---------- -->
+    <div class="sistema-card" id="card-mac">
+      <div class="icone">🍎</div>
+      <h3>macOS</h3>
+      <div class="resumo">Tudo o que é do Mac está na pasta <code>mac</code></div>
+
+      <ol class="passos">
+        <li>Abra a pasta <code>mac</code></li>
+        <li>Clique duas vezes em <code>DLCast.command</code></li>
+        <li>O painel abre sozinho no navegador</li>
+      </ol>
+
+      <a class="botao" href="src/web/index.html">Abrir instruções do Mac</a>
+
+      <div class="nota-caixa">
+        <strong>Não precisa instalar nada.</strong> O servidor já vem dentro
+        da pasta, nas versões para Apple Silicon e Intel — o sistema escolhe
+        a certa sozinho.
+        <br><br>
+        Para desligar depois, clique duas vezes em
+        <code>mac/DESLIGAR.command</code>.
+      </div>
+    </div>
+
+    <!-- ---------- WINDOWS ---------- -->
+    <div class="sistema-card" id="card-win">
+      <div class="icone">🪟</div>
+      <h3>Windows</h3>
+      <div class="resumo">Tudo o que é do Windows está na pasta <code>windows</code></div>
+
+      <ol class="passos">
+        <li>Abra a pasta <code>windows</code></li>
+        <li>Clique duas vezes em <code>DLCast.bat</code></li>
+        <li>Quando o Windows perguntar, marque <strong>Redes particulares</strong> e permita</li>
+        <li>Pronto — o endereço aparece na tela</li>
+      </ol>
+
+      <a class="botao" href="src/web/instalar-windows.html">Abrir instruções do Windows</a>
+
+      <div class="nota-caixa">
+        Não precisa instalar nada. O servidor já vem pronto dentro da pasta.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ ESTRUTURA ============ -->
+  <h2 class="secao">Como as pastas estão organizadas</h2>
+
+  <div class="cartao">
+    <div class="arvore">
+DLCast/<br>
+│<br>
+├── <strong>COMECE-AQUI.html</strong> <span class="nota">← você está aqui</span><br>
+│<br>
+├── <span class="mac">mac/</span> <span class="nota">.................. só macOS</span><br>
+│   ├── <span class="mac">DLCast.command</span> <span class="nota">... clique duplo para ligar</span><br>
+│   ├── <span class="mac">DESLIGAR.command</span> <span class="nota">. clique duplo para desligar</span><br>
+│   ├── <span class="mac">mediamtx-arm64</span> <span class="nota">... servidor (Apple Silicon)</span><br>
+│   ├── <span class="mac">mediamtx-intel</span> <span class="nota">... servidor (Macs Intel)</span><br>
+│   ├── djio <span class="nota">.............. comandos do terminal</span><br>
+│   ├── backup.sh<br>
+│   └── instalar.sh<br>
+│<br>
+├── <span class="win">windows/</span> <span class="nota">.............. só Windows</span><br>
+│   ├── <span class="win">DLCast.bat</span> <span class="nota">....... clique duplo para ligar</span><br>
+│   ├── <span class="win">mediamtx.exe</span> <span class="nota">..... servidor (já incluso)</span><br>
+│   ├── djio.ps1 <span class="nota">.......... comandos do PowerShell</span><br>
+│   └── LEIA-ME.txt<br>
+│<br>
+├── <span class="comum">config/</span> <span class="nota">............... configuração (os dois usam)</span><br>
+├── <span class="comum">src/web/</span> <span class="nota">.............. painel e páginas (os dois usam)</span><br>
+├── <span class="comum">docs/</span> <span class="nota">................. documentação (os dois usam)</span><br>
+│<br>
+├── recordings/ <span class="nota">........... seus vídeos gravados</span><br>
+├── logs/ <span class="nota">................. registros do servidor</span><br>
+└── backups/ <span class="nota">.............. histórico de versões</span>
+    </div>
+
+    <div class="legenda">
+      <span><i class="ponto" style="background:var(--verde)"></i> só macOS</span>
+      <span><i class="ponto" style="background:var(--azul)"></i> só Windows</span>
+      <span><i class="ponto" style="background:var(--roxo)"></i> compartilhado</span>
+    </div>
+
+    <div class="nota-caixa">
+      <strong>Por que dividir assim?</strong> Cada sistema tem seu jeito de
+      executar programas — o Mac usa <code>.command</code>, o Windows usa
+      <code>.bat</code>. Já a configuração, o painel e a documentação são
+      idênticos nos dois, então ficam em pastas compartilhadas. Assim não
+      existe arquivo duplicado, e você sabe na hora onde mexer.
+    </div>
+  </div>
+
+  <!-- ============ O QUE PRECISA INSTALAR ============ -->
+  <h2 class="secao">O que precisa estar instalado</h2>
+
+  <div class="cartao">
+    <table class="req">
+      <tr>
+        <th>Programa</th><th>macOS</th><th>Windows</th><th>Para quê</th>
+      </tr>
+      <tr>
+        <td><strong>MediaMTX</strong></td>
+        <td class="sim">já incluso</td>
+        <td class="sim">já incluso</td>
+        <td>É o servidor. Obrigatório.</td>
+      </tr>
+      <tr>
+        <td>FFmpeg</td>
+        <td class="nao">opcional</td>
+        <td class="nao">opcional</td>
+        <td>Só para retransmitir ao YouTube</td>
+      </tr>
+      <tr>
+        <td>Python</td>
+        <td class="sim">já vem no Mac</td>
+        <td class="nao">opcional</td>
+        <td>Só para o painel visual</td>
+      </tr>
+    </table>
+
+    <div class="aviso">
+      <strong>Zero instalação nos dois sistemas.</strong> O servidor já vem
+      dentro das pastas <code>mac</code> e <code>windows</code>. FFmpeg e
+      Python só fazem falta se você quiser retransmitir para o YouTube ou usar
+      o painel com estatísticas.
+    </div>
+  </div>
+
+  <!-- ============ LEMBRETE DO DRONE ============ -->
+  <h2 class="secao">Antes do primeiro voo</h2>
+
+  <div class="cartao">
+    <div class="aviso" style="margin-top:0">
+      <strong>Os dois erros que travam todo mundo:</strong>
+      <br><br>
+      <strong>1. O microfone.</strong> A partir do DJI Fly v1.16.0, o controle
+      RC 2 exige um microfone conectado no USB-C. Sem ele, o botão de iniciar
+      transmissão simplesmente não responde — e não aparece mensagem de erro
+      nenhuma explicando isso.
+      <br><br>
+      <strong>2. A rede.</strong> O controle precisa estar no mesmo Wi-Fi que
+      o computador. Lembre que o drone não fala com o computador: quem envia o
+      vídeo pela rede é o controle.
+    </div>
+  </div>
+
+  <footer>
+    <strong>DLCast</strong> · por Daniel Júnior · DL Mídia<br>
+    Projeto gratuito. O vídeo nunca sai da sua rede, a menos que você mande.
+  </footer>
+</div>
+
+<script>
+/******************************************************************************
+ * Detecta o sistema para destacar o caminho certo logo de cara.
+ *
+ * Esta página é aberta com clique duplo (protocolo file://), então não pode
+ * depender de servidor nenhum — tudo aqui funciona offline.
+ ******************************************************************************/
+(function detectarSistema() {
+  const ua = navigator.userAgent;
+  const plataforma = navigator.platform || '';
+
+  const ehMac = /Mac|iPhone|iPad/i.test(ua) || /Mac/i.test(plataforma);
+  const ehWindows = /Win/i.test(ua) || /Win/i.test(plataforma);
+
+  const elNome  = document.getElementById('nome-sistema');
+  const elTexto = document.getElementById('texto-sistema');
+  const elBotao = document.getElementById('botao-sistema');
+
+  if (ehWindows) {
+    elNome.innerHTML = '<span class="ic">🪟</span>Windows';
+    elTexto.textContent = 'Abra a pasta "windows" e clique duas vezes em DLCast.bat. Não precisa instalar nada.';
+    elBotao.textContent = 'Ver o passo a passo do Windows';
+    elBotao.href = 'src/web/instalar-windows.html';
+    document.getElementById('card-win').style.borderColor = 'var(--azul)';
+  } else if (ehMac) {
+    elNome.innerHTML = '<span class="ic">🍎</span>macOS';
+    elTexto.textContent = 'Abra a pasta "mac" e clique duas vezes em DLCast.command. Não precisa instalar nada.';
+    elBotao.textContent = 'Ver o passo a passo do Mac';
+    elBotao.href = 'src/web/index.html';
+    document.getElementById('card-mac').style.borderColor = 'var(--verde)';
+  } else {
+    // Sistema desconhecido: em vez de chutar, mostramos as duas opções.
+    document.getElementById('detectado').style.display = 'none';
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,840 @@
+#!/usr/bin/env bash
+###############################################################################
+# DJIO - Interface de linha de comando do servidor de transmissao de drones
+#
+# Este e o unico comando que voce precisa memorizar. Rode "djio" sem
+# argumentos para ver todas as opcoes.
+#
+# Uso rapido no dia do voo:
+#   ./mac/djio start     -> liga o servidor
+#   ./mac/djio url       -> mostra o que digitar no controle DJI
+#   ./mac/djio watch     -> abre o video no navegador
+#   ./mac/djio stop      -> desliga tudo
+#
+# Projeto: DJIO | Documentacao: docs/
+###############################################################################
+
+set -uo pipefail
+
+# --- Localiza a raiz do projeto -------------------------------------------
+# Resolve o caminho real mesmo se o script for chamado de outra pasta ou via
+# link simbolico. Todo o resto do projeto depende de estarmos na raiz, porque
+# a config do MediaMTX usa caminhos relativos (o que torna o projeto portatil).
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+done
+PROJECT_ROOT="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+cd "$PROJECT_ROOT" || exit 1
+
+# --- Constantes -----------------------------------------------------------
+CONFIG="config/mediamtx.yml"
+PIDFILE="logs/mediamtx.pid"
+LOGFILE="logs/mediamtx.log"
+API="http://127.0.0.1:9997/v3"
+STREAM_PADRAO="drone"
+
+RTMP_PORT=1935
+HLS_PORT=8888
+WEBRTC_PORT=8889
+RTSP_PORT=8554
+API_PORT=9997
+PAINEL_PORT=8080
+
+# --- Cores ----------------------------------------------------------------
+if [ -t 1 ]; then
+  VERDE=$'\033[0;32m'; VERM=$'\033[0;31m'; AMAR=$'\033[0;33m'
+  AZUL=$'\033[0;36m'; NEG=$'\033[1m'; FIM=$'\033[0m'
+else
+  VERDE=""; VERM=""; AMAR=""; AZUL=""; NEG=""; FIM=""
+fi
+
+ok()    { echo "${VERDE}[OK]${FIM} $*"; }
+erro()  { echo "${VERM}[ERRO]${FIM} $*" >&2; }
+aviso() { echo "${AMAR}[!]${FIM} $*"; }
+info()  { echo "${AZUL}[i]${FIM} $*"; }
+
+titulo() {
+  echo
+  echo "${NEG}=============================================================${FIM}"
+  echo "${NEG} $*${FIM}"
+  echo "${NEG}=============================================================${FIM}"
+}
+
+###############################################################################
+# Descobre o IP do Mac na rede local.
+#
+# Este e o dado mais importante do projeto: e o endereco que voce digita no
+# controle do drone. Testamos as interfaces em ordem de prioridade, porque um
+# Mac pode ter Wi-Fi e cabo ligados ao mesmo tempo.
+###############################################################################
+detectar_ip() {
+  local ip=""
+
+  # Pergunta ao sistema qual interface atende a rota padrao (a que realmente
+  # tem internet/rede). Mais confiavel que chutar "en0".
+  local iface
+  iface="$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')"
+
+  if [ -n "$iface" ]; then
+    ip="$(ipconfig getifaddr "$iface" 2>/dev/null)"
+  fi
+
+  # Plano B: varre as interfaces comuns de Wi-Fi e Ethernet/adaptador USB.
+  if [ -z "$ip" ]; then
+    for i in en0 en1 en2 en3 en4 en5 en6; do
+      ip="$(ipconfig getifaddr "$i" 2>/dev/null)"
+      [ -n "$ip" ] && break
+    done
+  fi
+
+  echo "${ip:-}"
+}
+
+###############################################################################
+# Descobre qual executavel do servidor usar.
+#
+# Ordem de preferencia:
+#   1. O binario que vem dentro da pasta mac/ - assim o projeto funciona
+#      sem instalar nada, bastando copiar a pasta para outro Mac.
+#   2. Uma instalacao do sistema (Homebrew), para quem prefere manter
+#      atualizado por fora.
+#
+# Apple Silicon e Intel usam executaveis diferentes; escolhemos pelo que o
+# proprio sistema informa, em vez de assumir.
+###############################################################################
+localizar_mediamtx() {
+  local arquitetura
+  arquitetura="$(uname -m)"
+
+  local local_bin=""
+  case "$arquitetura" in
+    arm64)  local_bin="$PROJECT_ROOT/mac/mediamtx-arm64" ;;
+    x86_64) local_bin="$PROJECT_ROOT/mac/mediamtx-intel" ;;
+  esac
+
+  if [ -n "$local_bin" ] && [ -x "$local_bin" ]; then
+    echo "$local_bin"
+    return 0
+  fi
+
+  # Plano B: versao instalada no sistema.
+  if command -v mediamtx >/dev/null 2>&1; then
+    command -v mediamtx
+    return 0
+  fi
+
+  return 1
+}
+
+# Verifica se o servidor esta rodando. Retorna 0 (sucesso) se sim.
+esta_rodando() {
+  pgrep -f "mediamtx.*${CONFIG}" >/dev/null 2>&1
+}
+
+# Consulta a API e devolve JSON. Silencioso se o servidor estiver desligado.
+api_get() {
+  curl -s --max-time 3 "${API}/$1" 2>/dev/null
+}
+
+###############################################################################
+# COMANDO: start
+###############################################################################
+cmd_start() {
+  titulo "INICIANDO SERVIDOR DJIO"
+
+  if esta_rodando; then
+    aviso "O servidor JA esta rodando."
+    info "Use './mac/djio status' para ver os detalhes."
+    return 0
+  fi
+
+  # Verifica dependencia antes de tentar, para dar erro claro.
+  local servidor
+  if ! servidor="$(localizar_mediamtx)"; then
+    erro "O servidor MediaMTX nao foi encontrado."
+    info "O executavel deveria estar em mac/mediamtx-$(uname -m | sed 's/x86_64/intel/')"
+    info "Se apagou por engano, baixe em:"
+    echo "    https://github.com/bluenviron/mediamtx/releases/latest"
+    info "Ou instale pelo sistema:  brew install mediamtx"
+    return 1
+  fi
+
+  if [ ! -f "$CONFIG" ]; then
+    erro "Configuracao nao encontrada: $CONFIG"
+    info "Voce esta na pasta certa do projeto?"
+    return 1
+  fi
+
+  # Confere se a porta RTMP esta livre. Se outro programa a ocupou, o
+  # MediaMTX morreria sem explicacao clara.
+  if lsof -nP -iTCP:${RTMP_PORT} -sTCP:LISTEN >/dev/null 2>&1; then
+    erro "A porta ${RTMP_PORT} (RTMP) ja esta em uso por outro programa."
+    info "Descubra quem esta usando com:"
+    echo "    lsof -nP -iTCP:${RTMP_PORT} -sTCP:LISTEN"
+    return 1
+  fi
+
+  mkdir -p logs recordings
+
+  # Inicia desacoplado do terminal: fecha o terminal e o servidor continua.
+  nohup "$servidor" "$CONFIG" >> "$LOGFILE" 2>&1 &
+  echo $! > "$PIDFILE"
+
+  # Aguarda a porta RTMP realmente aceitar conexao, em vez de assumir sucesso.
+  local tentativas=0
+  while [ $tentativas -lt 20 ]; do
+    if lsof -nP -iTCP:${RTMP_PORT} -sTCP:LISTEN >/dev/null 2>&1; then
+      ok "Servidor no ar (PID $(cat "$PIDFILE"))."
+      echo
+      cmd_url
+      return 0
+    fi
+    tentativas=$((tentativas + 1))
+    perl -e 'select(undef,undef,undef,0.25)' 2>/dev/null || true
+  done
+
+  erro "O servidor nao subiu. Ultimas linhas do log:"
+  tail -15 "$LOGFILE"
+  return 1
+}
+
+###############################################################################
+# COMANDO: stop
+###############################################################################
+cmd_stop() {
+  titulo "PARANDO SERVIDOR DJIO"
+
+  # Encerra tambem o servidor do painel, se estiver no ar.
+  if [ -f logs/painel.pid ]; then
+    kill "$(cat logs/painel.pid)" 2>/dev/null && ok "Painel encerrado."
+    rm -f logs/painel.pid
+  fi
+
+  if ! esta_rodando; then
+    aviso "O servidor ja estava parado."
+    return 0
+  fi
+
+  pkill -f "mediamtx .*${CONFIG}" 2>/dev/null
+
+  local tentativas=0
+  while [ $tentativas -lt 20 ]; do
+    if ! esta_rodando; then
+      rm -f "$PIDFILE"
+      ok "Servidor parado."
+      return 0
+    fi
+    tentativas=$((tentativas + 1))
+    perl -e 'select(undef,undef,undef,0.25)' 2>/dev/null || true
+  done
+
+  aviso "O servidor nao respondeu ao pedido normal. Forcando encerramento."
+  pkill -9 -f "mediamtx .*${CONFIG}" 2>/dev/null
+  rm -f "$PIDFILE"
+  ok "Servidor encerrado a forca."
+}
+
+###############################################################################
+# COMANDO: url
+#
+# Mostra, em letras grandes, exatamente o que deve ser digitado na tela do
+# controle DJI. E o comando que voce mais vai usar em campo.
+###############################################################################
+cmd_url() {
+  local ip
+  ip="$(detectar_ip)"
+
+  if [ -z "$ip" ]; then
+    erro "Nao consegui detectar o IP do seu Mac."
+    aviso "Verifique se o Wi-Fi ou o cabo de rede esta conectado."
+    return 1
+  fi
+
+  titulo "DIGITE ISTO NO DJI FLY (controle RC 2)"
+  echo
+  echo "  ${NEG}${VERDE}rtmp://${ip}:${RTMP_PORT}/${STREAM_PADRAO}${FIM}"
+  echo
+  echo "  Caminho no controle:"
+  echo "    Ajustes > Transmissao > Plataformas de Transmissao > RTMP"
+  echo
+  echo "  ${AMAR}LEMBRETES IMPORTANTES DO RC 2:${FIM}"
+  echo "    1. O controle precisa estar no MESMO Wi-Fi que este Mac."
+  echo "    2. A partir do DJI Fly v1.16.0 e obrigatorio ter um MICROFONE"
+  echo "       conectado ao controle, senao o botao de iniciar nao funciona."
+  echo "    3. O RC 2 transmite no maximo em 720p (limite do hardware dele)."
+  echo
+  echo "  ${NEG}Para assistir depois de iniciar:${FIM}"
+  echo "    Navegador (rapido) : http://${ip}:${WEBRTC_PORT}/${STREAM_PADRAO}"
+  echo "    Navegador (compat) : http://${ip}:${HLS_PORT}/${STREAM_PADRAO}"
+  echo "    OBS / VLC          : rtsp://${ip}:${RTSP_PORT}/${STREAM_PADRAO}"
+  echo
+}
+
+###############################################################################
+# COMANDO: status
+###############################################################################
+cmd_status() {
+  titulo "STATUS DO SERVIDOR DJIO"
+
+  if ! esta_rodando; then
+    echo "  Estado: ${VERM}PARADO${FIM}"
+    echo
+    info "Inicie com: ./mac/djio start"
+    return 0
+  fi
+
+  local ip; ip="$(detectar_ip)"
+  echo "  Estado : ${VERDE}RODANDO${FIM}"
+  echo "  PID    : $(pgrep -f "mediamtx .*${CONFIG}" | head -1)"
+  echo "  IP     : ${ip:-desconhecido}"
+  echo
+
+  # Pergunta a API quem esta transmitindo agora.
+  local json; json="$(api_get "paths/list")"
+
+  if [ -z "$json" ]; then
+    aviso "O processo esta vivo, mas a API nao respondeu."
+    return 0
+  fi
+
+  echo "${NEG}  TRANSMISSOES ATIVAS:${FIM}"
+  echo "$json" | python3 -c '
+import sys, json
+try:
+    dados = json.load(sys.stdin)
+except Exception:
+    print("    (nao foi possivel ler a resposta da API)"); sys.exit()
+
+if isinstance(dados, dict) and dados.get("status") == "error":
+    print("    Erro da API:", dados.get("error"))
+    print("    Falta a permissao \"api\" em authInternalUsers (config/mediamtx.yml).")
+    sys.exit()
+
+itens = dados.get("items", [])
+ativos = [p for p in itens if p.get("ready")]
+
+if not ativos:
+    print("    Nenhuma transmissao no ar. O servidor esta aguardando o drone.")
+else:
+    for p in ativos:
+        nome = p.get("name", "?")
+        # Converte bytes recebidos para algo legivel.
+        b = p.get("bytesReceived", 0)
+        for u in ["B","KB","MB","GB"]:
+            if b < 1024: tam = f"{b:.1f} {u}"; break
+            b /= 1024
+        else: tam = f"{b:.1f} TB"
+        leitores = len(p.get("readers", []))
+        faixas = ", ".join(p.get("tracks", [])) or "?"
+        print(f"    * {nome}")
+        print(f"        recebido    : {tam}")
+        print(f"        faixas      : {faixas}")
+        print(f"        assistindo  : {leitores} pessoa(s)")
+'
+  echo
+}
+
+###############################################################################
+# COMANDO: test
+#
+# Gera um video colorido de teste e o envia ao servidor, provando que todo o
+# caminho funciona SEM precisar tirar o drone da mochila.
+###############################################################################
+cmd_test() {
+  titulo "TESTE DO SISTEMA (sem o drone)"
+
+  if ! esta_rodando; then
+    erro "O servidor esta parado. Rode primeiro: ./mac/djio start"
+    return 1
+  fi
+
+  if ! command -v ffmpeg >/dev/null 2>&1; then
+    erro "FFmpeg nao encontrado. Instale com: brew install ffmpeg"
+    return 1
+  fi
+
+  local ip; ip="$(detectar_ip)"
+  local segundos="${1:-30}"
+
+  info "Enviando video de teste por ${segundos} segundos..."
+  echo
+  echo "  Assista agora em:"
+  echo "    ${NEG}http://${ip:-127.0.0.1}:${WEBRTC_PORT}/teste${FIM}"
+  echo
+  info "Se voce ver as barras coloridas se movendo, o servidor esta 100%."
+  echo
+
+  # -re envia em tempo real (velocidade natural), imitando uma camera.
+  # h264_videotoolbox usa o chip de video do Mac, poupando o processador.
+  ffmpeg -hide_banner -loglevel error -stats \
+    -re \
+    -f lavfi -i "testsrc2=size=1280x720:rate=30" \
+    -f lavfi -i "sine=frequency=1000:sample_rate=48000" \
+    -c:v h264_videotoolbox -b:v 4000k -pix_fmt yuv420p -g 60 \
+    -c:a aac -b:a 128k -ar 48000 \
+    -t "$segundos" \
+    -f flv "rtmp://127.0.0.1:${RTMP_PORT}/teste"
+
+  echo
+  ok "Teste concluido."
+}
+
+###############################################################################
+# COMANDO: watch
+###############################################################################
+cmd_watch() {
+  local stream="${1:-$STREAM_PADRAO}"
+  local ip; ip="$(detectar_ip)"
+  local url="http://${ip:-127.0.0.1}:${WEBRTC_PORT}/${stream}"
+
+  info "Abrindo o player de baixa latencia no navegador..."
+  echo "  $url"
+  open "$url" 2>/dev/null || aviso "Abra manualmente: $url"
+}
+
+###############################################################################
+# Gera src/web/ambiente.json com as pastas reais deste computador.
+#
+# Por que isso existe: o navegador, por seguranca, nao enxerga o sistema de
+# arquivos. Sem esta ponte, o painel nao teria como sugerir "Filmes" ou
+# "Area de Trabalho" como destino das gravacoes - o usuario teria que digitar
+# o caminho inteiro na mao.
+###############################################################################
+gerar_ambiente() {
+  local pastas_json=""
+
+  # Monta a lista apenas com pastas que realmente existem, para nao
+  # oferecer um destino que falharia na hora de gravar.
+  adicionar_pasta() {
+    local rotulo="$1" caminho="$2"
+    [ -d "$caminho" ] || return
+    [ -n "$pastas_json" ] && pastas_json="${pastas_json},"
+    pastas_json="${pastas_json}{\"rotulo\":\"${rotulo}\",\"caminho\":\"${caminho}\"}"
+  }
+
+  adicionar_pasta "Filmes"           "$HOME/Movies"
+  adicionar_pasta "Area de Trabalho" "$HOME/Desktop"
+  adicionar_pasta "Documentos"       "$HOME/Documents"
+  adicionar_pasta "Downloads"        "$HOME/Downloads"
+
+  # Discos externos: o destino ideal para gravacao longa, por causa do espaco.
+  # Volumes internos do sistema sao ignorados: oferece-los levaria o usuario
+  # a gravar em lugares protegidos ou em backups do Time Machine.
+  if [ -d /Volumes ]; then
+    for volume in /Volumes/*/; do
+      local nome
+      nome="$(basename "$volume")"
+      case "$nome" in
+        "Macintosh HD"|com.apple.*|.*|*TimeMachine*|*TIMEMACHINE*) continue ;;
+      esac
+      # So oferece se der para escrever de verdade nele.
+      [ -w "${volume%/}" ] || continue
+      adicionar_pasta "Disco: ${nome}" "${volume%/}"
+    done
+  fi
+
+  cat > src/web/ambiente.json <<JSON
+{
+  "projeto": "${PROJECT_ROOT}",
+  "padrao": "${PROJECT_ROOT}/recordings",
+  "home": "${HOME}",
+  "pastas": [${pastas_json}]
+}
+JSON
+}
+
+###############################################################################
+# COMANDO: painel
+#
+# O painel e servido por um pequeno servidor HTTP em vez de ser aberto como
+# arquivo solto. Isso e necessario por dois motivos:
+#   1. Aberto como arquivo (file://), o navegador bloqueia a consulta a API
+#      por politica de seguranca, e o painel ficaria sem dados.
+#   2. Servido por HTTP, o painel fica acessivel de QUALQUER aparelho da
+#      rede - celular, tablet, outro computador.
+###############################################################################
+cmd_painel() {
+  local arquivo="$PROJECT_ROOT/src/web/painel.html"
+  if [ ! -f "$arquivo" ]; then
+    erro "Painel nao encontrado em src/web/painel.html"
+    return 1
+  fi
+
+  local ip; ip="$(detectar_ip)"
+  # Abre a pagina de boas-vindas por padrao. Ela explica como configurar
+  # cada tipo de equipamento e leva ao painel. Use "djio painel --direto"
+  # para pular direto ao painel de controle.
+  local pagina="index.html"
+  [ "${1:-}" = "--direto" ] && pagina="painel.html"
+  local url="http://${ip:-127.0.0.1}:${PAINEL_PORT}/${pagina}"
+
+  # O navegador nao tem como saber os caminhos de pasta deste computador.
+  # Geramos um arquivo com essa informacao para o painel poder oferecer
+  # opcoes reais de onde salvar as gravacoes.
+  gerar_ambiente
+
+  # Reaproveita o servidor do painel se ele ja estiver no ar.
+  if lsof -nP -iTCP:${PAINEL_PORT} -sTCP:LISTEN >/dev/null 2>&1; then
+    info "Painel ja estava no ar."
+  else
+    mkdir -p logs
+    nohup python3 -m http.server "${PAINEL_PORT}" \
+      --directory "$PROJECT_ROOT/src/web" \
+      >> logs/painel.log 2>&1 &
+    echo $! > logs/painel.pid
+
+    local tentativas=0
+    while [ $tentativas -lt 20 ]; do
+      lsof -nP -iTCP:${PAINEL_PORT} -sTCP:LISTEN >/dev/null 2>&1 && break
+      tentativas=$((tentativas + 1))
+      perl -e 'select(undef,undef,undef,0.25)' 2>/dev/null || true
+    done
+  fi
+
+  titulo "PAINEL DE CONTROLE DJIO"
+  echo
+  echo "  Neste Mac:"
+  echo "    ${NEG}${VERDE}${url}${FIM}"
+  echo
+  echo "  No celular ou tablet (mesma rede Wi-Fi):"
+  echo "    ${NEG}${url}${FIM}"
+  echo
+  info "O painel mostra o video ao vivo, o endereco do drone e as estatisticas."
+  echo
+
+  open "$url" 2>/dev/null || aviso "Abra manualmente o endereco acima."
+}
+
+###############################################################################
+# COMANDO: restream
+#
+# Pega o video que o drone esta enviando e repassa para YouTube, Facebook,
+# Twitch ou qualquer RTMP. O Mac vira a ponte entre o drone e o mundo.
+###############################################################################
+cmd_restream() {
+  local destino="${1:-}"
+  local chave="${2:-}"
+
+  if [ -z "$destino" ] || [ -z "$chave" ]; then
+    titulo "RETRANSMISSAO PARA PLATAFORMAS"
+    echo "  Uso: ./mac/djio restream <plataforma> <sua-chave>"
+    echo
+    echo "  Plataformas prontas:"
+    echo "    youtube    - YouTube Live"
+    echo "    facebook   - Facebook Live"
+    echo "    twitch     - Twitch"
+    echo "    instagram  - Instagram Live"
+    echo "    custom     - informe a URL RTMP completa como chave"
+    echo
+    echo "  Exemplo:"
+    echo "    ./mac/djio restream youtube abcd-1234-efgh-5678"
+    echo
+    echo "  A chave de transmissao fica no painel da plataforma"
+    echo "  (no YouTube: YouTube Studio > Transmitir ao vivo)."
+    return 1
+  fi
+
+  if ! esta_rodando; then
+    erro "O servidor esta parado. Rode primeiro: ./mac/djio start"
+    return 1
+  fi
+
+  local url_saida
+  case "$destino" in
+    youtube)   url_saida="rtmp://a.rtmp.youtube.com/live2/${chave}" ;;
+    facebook)  url_saida="rtmps://live-api-s.facebook.com:443/rtmp/${chave}" ;;
+    twitch)    url_saida="rtmp://live.twitch.tv/app/${chave}" ;;
+    instagram) url_saida="rtmps://live-upload.instagram.com:443/rtmp/${chave}" ;;
+    custom)    url_saida="${chave}" ;;
+    *)
+      erro "Plataforma desconhecida: $destino"
+      info "Use: youtube, facebook, twitch, instagram ou custom"
+      return 1
+      ;;
+  esac
+
+  titulo "RETRANSMITINDO PARA ${destino}"
+  aviso "Nao feche este terminal enquanto estiver ao vivo."
+  info "Pressione Control+C para encerrar a retransmissao."
+  echo
+
+  # -c copy repassa o video EXATAMENTE como veio, sem reprocessar.
+  # Isso quase nao usa processador e nao perde qualidade. Como o RC 2 ja
+  # entrega H.264/AAC, que e o que as plataformas aceitam, nao ha motivo
+  # para reconverter.
+  ffmpeg -hide_banner -loglevel warning -stats \
+    -i "rtmp://127.0.0.1:${RTMP_PORT}/${STREAM_PADRAO}" \
+    -c copy \
+    -f flv "$url_saida"
+}
+
+###############################################################################
+# COMANDO: monitor
+#
+# Fica de vigia mostrando, ao vivo, QUALQUER tentativa de conexao que chegue
+# ao servidor. Serve para responder a pergunta mais importante quando "nao
+# funciona": o controle esta conseguindo falar com o Mac, ou nem isso?
+#
+#   - Aparece "CONEXAO RECEBIDA" -> a rede esta OK, o problema e outro
+#   - Nao aparece nada           -> o controle nao alcanca o Mac (rede)
+###############################################################################
+cmd_monitor() {
+  if ! esta_rodando; then
+    erro "O servidor esta parado. Rode primeiro: ./mac/djio start"
+    return 1
+  fi
+
+  local ip; ip="$(detectar_ip)"
+
+  titulo "MONITOR AO VIVO - AGUARDANDO O CONTROLE"
+  echo
+  echo "  Endereco que deve estar no DJI Fly:"
+  echo "    ${NEG}${VERDE}rtmp://${ip}:${RTMP_PORT}/${STREAM_PADRAO}${FIM}"
+  echo
+  echo "  Agora tente iniciar a transmissao no controle."
+  echo "  Tudo que chegar aparece aqui embaixo."
+  echo
+  echo "  ${AMAR}Se NADA aparecer${FIM}, o controle nao esta alcancando o Mac:"
+  echo "    - o controle pode estar em outra rede Wi-Fi"
+  echo "    - o roteador pode estar isolando os aparelhos entre si"
+  echo "    - o endereco digitado pode estar errado"
+  echo
+  echo "  Control+C para sair."
+  echo "  -----------------------------------------------------------"
+  echo
+
+  # Acompanha o log a partir de agora, destacando o que importa.
+  tail -0 -f "$LOGFILE" | while read -r linha; do
+    case "$linha" in
+      *"[RTMP]"*opened*)
+        echo "${VERDE}${NEG}  >>> CONEXAO RECEBIDA! <<<${FIM} $linha"
+        echo "      O controle ESTA falando com o Mac. A rede esta certa."
+        ;;
+      *"is publishing to path"*)
+        echo "${VERDE}${NEG}  >>> VIDEO ENTRANDO! <<<${FIM} $linha"
+        echo "      Funcionou. Abra o painel para assistir."
+        ;;
+      *"closed"*)
+        echo "${AMAR}  --- conexao encerrada ---${FIM} $linha"
+        ;;
+      *"[RTMP]"*)
+        echo "  $linha"
+        ;;
+    esac
+  done
+}
+
+###############################################################################
+# COMANDO: logs
+###############################################################################
+cmd_logs() {
+  if [ ! -f "$LOGFILE" ]; then
+    aviso "Ainda nao ha registro de log."
+    return 0
+  fi
+  info "Mostrando o log em tempo real. Control+C para sair."
+  echo
+  tail -f "$LOGFILE"
+}
+
+###############################################################################
+# COMANDO: gravacoes
+###############################################################################
+cmd_gravacoes() {
+  titulo "GRAVACOES SALVAS"
+
+  if [ ! -d recordings ] || [ -z "$(find recordings -type f -name '*.mp4' 2>/dev/null)" ]; then
+    info "Nenhuma gravacao ainda."
+    echo "  As gravacoes sao automaticas: tudo que o drone transmitir"
+    echo "  para o caminho '${STREAM_PADRAO}' e salvo em recordings/."
+    return 0
+  fi
+
+  find recordings -type f -name '*.mp4' -exec ls -lh {} \; 2>/dev/null \
+    | awk '{printf "  %-10s %s %s %s  %s\n", $5, $6, $7, $8, $9}' \
+    | sort -k5
+
+  echo
+  local total
+  total="$(du -sh recordings 2>/dev/null | cut -f1)"
+  echo "  ${NEG}Espaco total ocupado: ${total}${FIM}"
+  echo
+  info "Abrir a pasta:  open recordings/"
+}
+
+###############################################################################
+# COMANDO: doctor
+#
+# Diagnostico completo. Este e o comando para rodar quando "nao funciona"
+# e voce nao sabe por onde comecar.
+###############################################################################
+cmd_doctor() {
+  titulo "DIAGNOSTICO DO SISTEMA"
+  local problemas=0
+
+  echo "${NEG}  SERVIDOR (obrigatorio)${FIM}"
+  local servidor
+  if servidor="$(localizar_mediamtx)"; then
+    case "$servidor" in
+      "$PROJECT_ROOT"/*) echo "    ${VERDE}OK${FIM}   MediaMTX (incluso na pasta, $(uname -m))" ;;
+      *)                 echo "    ${VERDE}OK${FIM}   MediaMTX (instalado no sistema)" ;;
+    esac
+  else
+    echo "    ${VERM}FALTA${FIM} MediaMTX - sem ele nada funciona"
+    problemas=$((problemas + 1))
+  fi
+
+  echo
+  echo "${NEG}  OPCIONAIS${FIM}"
+  if command -v ffmpeg >/dev/null 2>&1; then
+    echo "    ${VERDE}OK${FIM}   ffmpeg - retransmissao e testes disponiveis"
+  else
+    echo "    ${AZUL}--${FIM}   ffmpeg ausente (so faz falta para retransmitir"
+    echo "         ao YouTube ou gerar video de teste)"
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    echo "    ${VERDE}OK${FIM}   python3 - painel visual disponivel"
+  else
+    echo "    ${AZUL}--${FIM}   python3 ausente (so faz falta para o painel)"
+  fi
+
+  echo
+  echo "${NEG}  ARQUIVOS DO PROJETO${FIM}"
+  for f in "$CONFIG" mac/djio; do
+    if [ -f "$f" ]; then
+      echo "    ${VERDE}OK${FIM}   $f"
+    else
+      echo "    ${VERM}FALTA${FIM} $f"
+      problemas=$((problemas + 1))
+    fi
+  done
+
+  echo
+  echo "${NEG}  REDE${FIM}"
+  local ip; ip="$(detectar_ip)"
+  if [ -n "$ip" ]; then
+    echo "    ${VERDE}OK${FIM}   IP local: $ip"
+    case "$ip" in
+      169.254.*)
+        echo "    ${AMAR}AVISO${FIM} Esse IP indica que o Mac NAO recebeu"
+        echo "          endereco do roteador. Verifique a conexao."
+        problemas=$((problemas + 1))
+        ;;
+    esac
+  else
+    echo "    ${VERM}FALTA${FIM} Nenhum IP de rede detectado"
+    problemas=$((problemas + 1))
+  fi
+
+  echo
+  echo "${NEG}  PORTAS${FIM}"
+  for p in "${RTMP_PORT}:RTMP" "${HLS_PORT}:HLS" "${WEBRTC_PORT}:WebRTC" "${API_PORT}:API"; do
+    local porta="${p%%:*}" nome="${p##*:}"
+    if lsof -nP -iTCP:"$porta" -sTCP:LISTEN >/dev/null 2>&1; then
+      local dono
+      dono="$(lsof -nP -iTCP:"$porta" -sTCP:LISTEN 2>/dev/null | awk 'NR==2{print $1}')"
+      if [ "$dono" = "mediamtx" ]; then
+        echo "    ${VERDE}OK${FIM}   $nome ($porta) - servidor DJIO ouvindo"
+      else
+        echo "    ${AMAR}AVISO${FIM} $nome ($porta) - ocupada por '$dono'"
+        problemas=$((problemas + 1))
+      fi
+    else
+      echo "    ${AZUL}--${FIM}   $nome ($porta) - livre (servidor parado)"
+    fi
+  done
+
+  echo
+  echo "${NEG}  ESPACO EM DISCO${FIM}"
+  local livre
+  livre="$(df -h . | awk 'NR==2{print $4}')"
+  echo "    Disponivel: $livre"
+  echo "    Estimativa: ~30 MB por minuto de gravacao em 720p"
+
+  echo
+  if [ "$problemas" -eq 0 ]; then
+    ok "Nenhum problema encontrado. Sistema pronto para voar."
+  else
+    aviso "$problemas ponto(s) de atencao encontrado(s) acima."
+    info "Consulte docs/06-TROUBLESHOOTING.md para as solucoes."
+  fi
+}
+
+###############################################################################
+# COMANDO: backup
+###############################################################################
+cmd_backup() {
+  exec "$PROJECT_ROOT/mac/backup.sh" "$@"
+}
+
+###############################################################################
+# AJUDA
+###############################################################################
+cmd_ajuda() {
+  cat <<AJUDA
+
+${NEG}DJIO${FIM} - Servidor de transmissao para drones DJI
+
+${NEG}USO${FIM}
+    ./mac/djio <comando> [opcoes]
+
+${NEG}OPERACAO DIARIA${FIM}
+    ${VERDE}start${FIM}              Liga o servidor
+    ${VERDE}stop${FIM}               Desliga o servidor
+    ${VERDE}restart${FIM}            Reinicia o servidor
+    ${VERDE}url${FIM}                Mostra o endereco para digitar no DJI Fly
+    ${VERDE}status${FIM}             Mostra quem esta transmitindo agora
+    ${VERDE}watch${FIM} [stream]     Abre o video no navegador
+    ${VERDE}painel${FIM}             Abre o painel de controle visual
+
+${NEG}TRANSMISSAO${FIM}
+    ${VERDE}restream${FIM} <plat> <chave>
+                       Repassa o video para YouTube, Facebook, Twitch...
+
+${NEG}VERIFICACAO${FIM}
+    ${VERDE}test${FIM} [segundos]    Testa o sistema sem usar o drone
+    ${VERDE}doctor${FIM}             Diagnostica problemas
+    ${VERDE}logs${FIM}               Acompanha o log em tempo real
+    ${VERDE}gravacoes${FIM}          Lista os videos ja gravados
+
+${NEG}PROJETO${FIM}
+    ${VERDE}backup${FIM} ["motivo"]  Salva uma versao do projeto em backups/
+
+${NEG}PRIMEIRA VEZ? SIGA ESTA ORDEM${FIM}
+    1. ./mac/djio doctor     (confere se esta tudo instalado)
+    2. ./mac/djio start      (liga o servidor)
+    3. ./mac/djio test       (confirma que funciona, sem o drone)
+    4. ./mac/djio url        (pega o endereco para o controle)
+
+AJUDA
+}
+
+###############################################################################
+# ROTEADOR DE COMANDOS
+###############################################################################
+comando="${1:-ajuda}"
+shift 2>/dev/null || true
+
+case "$comando" in
+  start)              cmd_start "$@" ;;
+  stop)               cmd_stop "$@" ;;
+  restart)            cmd_stop; cmd_start ;;
+  status|st)          cmd_status "$@" ;;
+  url|endereco)       cmd_url "$@" ;;
+  test|teste)         cmd_test "$@" ;;
+  watch|assistir)     cmd_watch "$@" ;;
+  painel|dashboard)   cmd_painel "$@" ;;
+  restream|repassar)  cmd_restream "$@" ;;
+  monitor|vigia)      cmd_monitor "$@" ;;
+  logs|log)           cmd_logs "$@" ;;
+  gravacoes|rec)      cmd_gravacoes "$@" ;;
+  doctor|diagnostico) cmd_doctor "$@" ;;
+  backup)             cmd_backup "$@" ;;
+  ajuda|help|-h|--help) cmd_ajuda ;;
+  *)
+    erro "Comando desconhecido: $comando"
+    cmd_ajuda
+    exit 1
+    ;;
+esac

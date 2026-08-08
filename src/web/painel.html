@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast — Painel de Controle</title>
+<style>
+  :root {
+    --fundo: #0d1117;
+    --cartao: #161b22;
+    --fundo2: #0b0f14;
+    --borda: #30363d;
+    --texto: #e6edf3;
+    --suave: #8b949e;
+    --verde: #3fb950;
+    --vermelho: #f85149;
+    --amarelo: #d29922;
+    --azul: #58a6ff;
+    --roxo: #bc8cff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    padding: 20px 14px 60px;
+  }
+
+  .container { max-width: 1240px; margin: 0 auto; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--borda);
+    margin-bottom: 22px;
+  }
+
+  h1 { font-size: 25px; letter-spacing: -0.5px; }
+  h1 span { color: var(--azul); }
+  .subtitulo { color: var(--suave); font-size: 13px; }
+
+  .estado {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--cartao); border: 1px solid var(--borda);
+    border-radius: 999px; padding: 8px 18px;
+    font-weight: 600; font-size: 13px;
+  }
+  .bolinha { width: 10px; height: 10px; border-radius: 50%; background: var(--suave); }
+  .bolinha.online  { background: var(--verde); animation: pulsar 2s infinite; }
+  .bolinha.offline { background: var(--vermelho); }
+  @keyframes pulsar {
+    0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(63,185,80,.6); }
+    50% { opacity:.7; box-shadow:0 0 0 8px rgba(63,185,80,0); }
+  }
+
+  .grade { display: grid; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 18px; margin-bottom: 18px; }
+  .largura-total { grid-column: 1 / -1; }
+
+  .cartao {
+    background: var(--cartao); border: 1px solid var(--borda);
+    border-radius: 12px; padding: 20px;
+  }
+  .cartao h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--suave); margin-bottom: 14px; font-weight: 700;
+  }
+
+  /* ---------- Player ---------- */
+  .player-caixa {
+    background:#000; border-radius:10px; overflow:hidden;
+    aspect-ratio:16/9; position:relative; border:1px solid var(--borda);
+  }
+  .player-caixa video { width:100%; height:100%; display:block; object-fit:contain; background:#000; }
+
+  .sem-sinal {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:8px;
+    color:var(--suave); text-align:center; padding:20px;
+  }
+  .sem-sinal .icone { font-size:38px; opacity:.5; }
+
+  /* Selo de gravação sobre o vídeo */
+  .selo-rec {
+    position:absolute; top:12px; left:12px;
+    display:none; align-items:center; gap:7px;
+    background:rgba(248,81,73,.92); color:#fff;
+    padding:5px 12px; border-radius:999px;
+    font-size:12px; font-weight:800; letter-spacing:.5px;
+    z-index:5;
+  }
+  .selo-rec.ativo { display:flex; }
+  .selo-rec .ponto { width:8px; height:8px; border-radius:50%; background:#fff; animation:piscar 1.2s infinite; }
+  @keyframes piscar { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+  /* Cronômetro sobre o vídeo */
+  .timecode {
+    position:absolute; top:12px; right:12px;
+    background:rgba(0,0,0,.72); color:var(--verde);
+    padding:5px 12px; border-radius:8px;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:14px; font-weight:700; letter-spacing:1px; z-index:5;
+  }
+
+  /* ---------- Métricas ao vivo ---------- */
+  .metricas {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr));
+    gap:10px; margin-top:14px;
+  }
+  .metrica { background:var(--fundo2); border:1px solid var(--borda); border-radius:9px; padding:11px 8px; text-align:center; }
+  .metrica .valor { font-size:19px; font-weight:800; color:var(--azul); line-height:1.25; font-variant-numeric:tabular-nums; }
+  .metrica .rotulo { font-size:10px; color:var(--suave); text-transform:uppercase; letter-spacing:.6px; }
+  .metrica .valor.bom    { color:var(--verde); }
+  .metrica .valor.medio  { color:var(--amarelo); }
+  .metrica .valor.ruim   { color:var(--vermelho); }
+
+  /* ---------- Botões ---------- */
+  button {
+    background:var(--azul); color:#04121f; border:none; border-radius:8px;
+    padding:11px 18px; font-size:14px; font-weight:700; cursor:pointer;
+    font-family:inherit; transition:opacity .15s, background .15s; width:100%;
+  }
+  button:hover { opacity:.87; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  button.secundario { background:transparent; color:var(--texto); border:1px solid var(--borda); }
+  button.secundario:hover { background:var(--fundo2); }
+  button.gravar { background:var(--vermelho); color:#fff; }
+  button.gravando { background:#7d1a16; color:#fff; }
+
+  .linha-botoes { display:flex; gap:9px; flex-wrap:wrap; }
+  .linha-botoes button { width:auto; flex:1; min-width:120px; }
+
+  /* ---------- Endereço ---------- */
+  .endereco {
+    background:var(--fundo2); border:2px dashed var(--azul); border-radius:10px;
+    padding:16px; text-align:center; margin-bottom:12px;
+  }
+  .endereco code {
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:clamp(14px,3.4vw,19px); color:var(--verde);
+    font-weight:700; word-break:break-all; display:block;
+  }
+
+  /* ---------- Links copiáveis ---------- */
+  .link-item {
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:11px 0; border-bottom:1px solid var(--borda);
+  }
+  .link-item:last-child { border-bottom:0; }
+  .link-info { min-width:0; flex:1; }
+  .link-nome { font-size:13px; font-weight:700; }
+  .link-nome .tag { font-size:10px; padding:2px 7px; border-radius:5px; margin-left:6px; font-weight:700; }
+  .tag.rapido { background:rgba(63,185,80,.18); color:var(--verde); }
+  .tag.medio  { background:rgba(210,153,34,.18); color:var(--amarelo); }
+  .link-url {
+    font-family:ui-monospace,Menlo,monospace; font-size:11px;
+    color:var(--suave); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .btn-copiar {
+    background:transparent; border:1px solid var(--borda); color:var(--texto);
+    padding:6px 13px; font-size:12px; border-radius:7px; width:auto; flex-shrink:0;
+  }
+  .btn-copiar.feito { background:var(--verde); color:#04121f; border-color:var(--verde); }
+
+  /* ---------- Tabela de informações ---------- */
+  table.info { width:100%; border-collapse:collapse; font-size:13px; }
+  table.info td { padding:8px 0; border-bottom:1px solid var(--borda); }
+  table.info td:first-child { color:var(--suave); width:45%; }
+  table.info td:last-child { text-align:right; font-weight:600; font-family:ui-monospace,Menlo,monospace; }
+  table.info tr:last-child td { border-bottom:0; }
+
+  /* ---------- Modal ---------- */
+  .modal-fundo {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.78);
+    z-index:100; padding:20px; overflow-y:auto;
+    backdrop-filter:blur(3px);
+  }
+  .modal-fundo.aberto { display:flex; align-items:flex-start; justify-content:center; }
+  .modal {
+    background:var(--cartao); border:1px solid var(--borda); border-radius:14px;
+    padding:26px; max-width:640px; width:100%; margin:auto;
+  }
+  .modal-topo { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .modal-topo h3 { font-size:18px; }
+  .fechar {
+    background:transparent; border:1px solid var(--borda); color:var(--texto);
+    width:34px; height:34px; border-radius:8px; font-size:19px; line-height:1;
+    cursor:pointer; padding:0; flex-shrink:0;
+  }
+  .modal-secao { margin-bottom:20px; }
+  .modal-secao h4 {
+    font-size:11px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--azul); margin-bottom:9px; font-weight:700;
+  }
+  .nota {
+    background:rgba(88,166,255,.09); border-left:3px solid var(--azul);
+    border-radius:6px; padding:11px 13px; font-size:12px; color:#a9d1ff; margin-top:12px;
+  }
+
+  .aviso {
+    background:rgba(210,153,34,.12); border-left:3px solid var(--amarelo);
+    border-radius:6px; padding:11px 13px; font-size:12.5px; margin-top:12px; color:#e3c07b;
+  }
+
+  ol.passos { list-style:none; counter-reset:p; }
+  ol.passos li { counter-increment:p; position:relative; padding:0 0 12px 36px; font-size:13.5px; }
+  ol.passos li::before {
+    content:counter(p); position:absolute; left:0; top:1px;
+    width:23px; height:23px; background:var(--azul); color:#04121f;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800;
+  }
+
+  footer { text-align:center; color:var(--suave); font-size:12px; margin-top:30px; }
+
+  .aviso-toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(90px);
+    background:var(--verde); color:#04121f; padding:11px 24px; border-radius:9px;
+    font-weight:700; font-size:14px; z-index:200; transition:transform .28s; box-shadow:0 6px 22px rgba(0,0,0,.45);
+  }
+  .aviso-toast.visivel { transform:translateX(-50%) translateY(0); }
+  .aviso-toast.erro { background:var(--vermelho); color:#fff; }
+
+  /* ---------- Opções de pasta de gravação ---------- */
+  .opcao-pasta {
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:9px;
+    padding:13px 15px; margin-bottom:9px; cursor:pointer; transition:all .15s;
+  }
+  .opcao-pasta:hover { border-color:var(--azul); }
+  .opcao-pasta.ativa { border-color:var(--azul); background:rgba(88,166,255,.1); }
+  .opcao-pasta .marca { color:var(--azul); font-weight:800; font-size:17px; opacity:0; flex-shrink:0; }
+  .opcao-pasta.ativa .marca { opacity:1; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1><span>DL</span>Cast</h1>
+      <div class="subtitulo">
+        Servidor de transmissão ao vivo ·
+        <a href="index.html" style="color:var(--suave)">Instruções</a> ·
+        <a href="instalar-windows.html" style="color:var(--suave)">Windows</a> ·
+        <a href="sobre.html" style="color:var(--suave)">Sobre</a>
+      </div>
+    </div>
+    <div class="estado">
+      <span class="bolinha" id="bolinha"></span>
+      <span id="texto-estado">verificando…</span>
+    </div>
+  </header>
+
+  <!-- ================= VÍDEO + MÉTRICAS ================= -->
+  <div class="cartao largura-total" style="margin-bottom:18px">
+    <h2>Vídeo ao vivo</h2>
+
+    <div class="player-caixa" id="caixa-player">
+      <video id="video" autoplay playsinline muted style="display:none"></video>
+      <div class="selo-rec" id="selo-rec"><span class="ponto"></span> GRAVANDO</div>
+      <div class="timecode" id="timecode" style="display:none">00:00:00</div>
+      <div class="sem-sinal" id="sem-sinal">
+        <div class="icone">📡</div>
+        <div><strong>Aguardando o drone</strong></div>
+        <div style="font-size:13px">O vídeo aparece aqui assim que a transmissão começar.</div>
+      </div>
+    </div>
+
+    <div class="metricas">
+      <div class="metrica"><div class="valor" id="m-bitrate">—</div><div class="rotulo">consumo</div></div>
+      <div class="metrica"><div class="valor" id="m-resolucao">—</div><div class="rotulo">resolução</div></div>
+      <div class="metrica"><div class="valor" id="m-fps">—</div><div class="rotulo">quadros/s</div></div>
+      <div class="metrica"><div class="valor" id="m-latencia">—</div><div class="rotulo">atraso</div></div>
+      <div class="metrica"><div class="valor" id="m-perda">—</div><div class="rotulo">perda</div></div>
+      <div class="metrica"><div class="valor" id="m-espectadores">—</div><div class="rotulo">assistindo</div></div>
+    </div>
+
+    <div class="linha-botoes" style="margin-top:16px">
+      <button class="gravar" id="btn-rec" onclick="alternarGravacao()">● Gravar</button>
+      <button class="secundario" onclick="abrirModal()">Informações técnicas</button>
+      <button class="secundario" onclick="reconectar()">Reconectar vídeo</button>
+      <button class="secundario" onclick="telaCheia()" id="btn-tela">Tela cheia</button>
+    </div>
+  </div>
+
+  <div class="grade">
+
+    <!-- ================= ENDEREÇO DO DRONE ================= -->
+    <div class="cartao">
+      <h2>Endereço para o controle DJI</h2>
+      <div class="endereco"><code id="url-rtmp">carregando…</code></div>
+      <button onclick="copiarTexto(URL_RTMP, this)">Copiar endereço</button>
+
+      <div class="aviso" style="background:rgba(88,166,255,.1);border-left-color:var(--azul);color:#a9d1ff">
+        <strong>O app pediu uma "chave" separada?</strong><br>
+        Aqui não há chave secreta — o servidor é seu. Se aparecerem dois campos:<br>
+        Endereço: <code id="url-sem-chave" style="color:var(--verde)"></code><br>
+        Chave: <code style="color:var(--verde)">drone</code>
+      </div>
+
+      <div class="aviso">
+        <strong>Sem microfone o botão não funciona.</strong> O DJI Fly v1.16.0+
+        exige microfone conectado ao RC 2 para iniciar a transmissão.
+      </div>
+    </div>
+
+    <!-- ================= LINKS PARA OBS / vMix ================= -->
+    <div class="cartao">
+      <h2>Links para copiar</h2>
+
+      <div class="link-item">
+        <div class="link-info">
+          <div class="link-nome">OBS / vMix <span class="tag rapido">recomendado</span></div>
+          <div class="link-url" id="u-rtsp">—</div>
+        </div>
+        <button class="btn-copiar" onclick="copiarTexto(LINKS.rtsp, this)">Copiar</button>
+      </div>
+
+      <div class="link-item">
+        <div class="link-info">
+          <div class="link-nome">Navegador <span class="tag rapido">&lt;1s</span></div>
+          <div class="link-url" id="u-webrtc">—</div>
+        </div>
+        <button class="btn-copiar" onclick="copiarTexto(LINKS.webrtc, this)">Copiar</button>
+      </div>
+
+      <div class="link-item">
+        <div class="link-info">
+          <div class="link-nome">Celular / TV <span class="tag medio">2-5s</span></div>
+          <div class="link-url" id="u-hls">—</div>
+        </div>
+        <button class="btn-copiar" onclick="copiarTexto(LINKS.hls, this)">Copiar</button>
+      </div>
+
+      <div class="link-item">
+        <div class="link-info">
+          <div class="link-nome">SRT <span class="tag medio">rede ruim</span></div>
+          <div class="link-url" id="u-srt">—</div>
+        </div>
+        <button class="btn-copiar" onclick="copiarTexto(LINKS.srt, this)">Copiar</button>
+      </div>
+
+      <div class="nota">
+        <strong>No OBS:</strong> Fonte → Origem de Mídia → desmarque "Arquivo local"
+        → cole o link RTSP. Em "Entrada", ajuste o buffer para 0 para reduzir o atraso.
+      </div>
+    </div>
+
+    <!-- ================= EQUIPAMENTO TRANSMISSOR ================= -->
+    <div class="cartao">
+      <h2>Equipamento transmitindo</h2>
+      <table class="info">
+        <tr><td>Aparelho (IP)</td><td id="e-ip">—</td></tr>
+        <tr><td>Protocolo</td><td id="e-protocolo">—</td></tr>
+        <tr><td>No ar há</td><td id="e-tempo">—</td></tr>
+        <tr><td>Total recebido</td><td id="e-total">—</td></tr>
+        <tr><td>Vídeo</td><td id="e-video">—</td></tr>
+        <tr><td>Áudio</td><td id="e-audio">—</td></tr>
+      </table>
+    </div>
+
+    <!-- ================= PASSO A PASSO ================= -->
+    <div class="cartao">
+      <h2>Como configurar no controle</h2>
+      <ol class="passos">
+        <li>Conecte o <strong>microfone</strong> no USB-C do controle</li>
+        <li>No DJI Fly, toque nos <strong>três pontinhos</strong></li>
+        <li>Entre em <strong>Transmissão</strong></li>
+        <li>Toque em <strong>Plataformas de Transmissão ao Vivo</strong></li>
+        <li>Escolha <strong>RTMP</strong> e cole o endereço</li>
+        <li>Toque em <strong>Iniciar</strong></li>
+      </ol>
+    </div>
+
+  </div>
+
+  <footer>
+    <strong>DLCast</strong> v0.3.0 · por Daniel Júnior · DL Mídia<br>
+    O painel se atualiza sozinho a cada segundo.
+  </footer>
+</div>
+
+<!-- ================= MODAL: ONDE SALVAR A GRAVAÇÃO ================= -->
+<div class="modal-fundo" id="modal-pasta" onclick="if(event.target===this)fecharModalPasta()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-topo">
+      <h3>Onde salvar a gravação?</h3>
+      <button class="fechar" onclick="fecharModalPasta()">×</button>
+    </div>
+
+    <p style="font-size:14px; color:var(--suave); margin-bottom:18px">
+      Escolha a pasta de destino antes de começar. Os vídeos podem ficar
+      grandes, então prefira um lugar com espaço sobrando.
+    </p>
+
+    <div id="lista-pastas" style="margin-bottom:16px"></div>
+
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px; color:var(--suave); font-weight:700; text-transform:uppercase; letter-spacing:.8px">
+        Ou digite outro caminho
+      </label>
+      <input type="text" id="pasta-custom" placeholder="/Volumes/MeuHD/Gravacoes"
+        style="width:100%; margin-top:8px; padding:11px 13px; background:var(--fundo2);
+               border:1px solid var(--borda); border-radius:8px; color:var(--texto);
+               font-family:ui-monospace,Menlo,monospace; font-size:13px;">
+    </div>
+
+    <div class="aviso" id="aviso-espaco">
+      <strong>Estimativa de espaço:</strong> cerca de <span id="est-hora">1,8 GB</span>
+      por hora de gravação, na qualidade que está entrando agora.
+    </div>
+
+    <div class="linha-botoes" style="margin-top:20px">
+      <button class="gravar" onclick="confirmarGravacao()">Começar a gravar</button>
+      <button class="secundario" onclick="fecharModalPasta()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL DE INFORMAÇÕES TÉCNICAS ================= -->
+<div class="modal-fundo" id="modal" onclick="if(event.target===this)fecharModal()">
+  <div class="modal">
+    <div class="modal-topo">
+      <h3>Informações técnicas</h3>
+      <button class="fechar" onclick="fecharModal()">×</button>
+    </div>
+
+    <div class="modal-secao">
+      <h4>Qualidade do vídeo</h4>
+      <table class="info">
+        <tr><td>Resolução</td><td id="t-resolucao">—</td></tr>
+        <tr><td>Quadros por segundo</td><td id="t-fps">—</td></tr>
+        <tr><td>Codec de vídeo</td><td id="t-codec">—</td></tr>
+        <tr><td>Perfil / Nível</td><td id="t-perfil">—</td></tr>
+        <tr><td>Codec de áudio</td><td id="t-audio">—</td></tr>
+      </table>
+    </div>
+
+    <div class="modal-secao">
+      <h4>Consumo de rede</h4>
+      <table class="info">
+        <tr><td>Taxa de recepção</td><td id="t-bitrate">—</td></tr>
+        <tr><td>Média por minuto</td><td id="t-porminuto">—</td></tr>
+        <tr><td>Média por hora</td><td id="t-porhora">—</td></tr>
+        <tr><td>Total recebido</td><td id="t-total">—</td></tr>
+        <tr><td>Enviado aos espectadores</td><td id="t-enviado">—</td></tr>
+      </table>
+    </div>
+
+    <div class="modal-secao">
+      <h4>Atraso e estabilidade</h4>
+      <table class="info">
+        <tr><td>Buffer de reprodução</td><td id="t-buffer">—</td></tr>
+        <tr><td>Ida e volta na rede</td><td id="t-rtt">—</td></tr>
+        <tr><td>Atraso estimado</td><td id="t-latencia">—</td></tr>
+        <tr><td>Variação do sinal (jitter)</td><td id="t-jitter">—</td></tr>
+        <tr><td>Pacotes perdidos</td><td id="t-perdidos">—</td></tr>
+        <tr><td>Quadros descartados</td><td id="t-descartados">—</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Sobre o atraso medido.</strong> O número mostrado é o atraso da
+        <em>rede até esta tela</em>: o tempo que o vídeo leva do servidor até
+        aqui, somando o buffer de reprodução. Ele <strong>não inclui</strong> o
+        caminho do drone até o controle nem do controle até o servidor, que o
+        navegador não tem como medir. O atraso real, da câmera até seus olhos,
+        é maior — some cerca de 1 a 3 segundos.
+      </div>
+    </div>
+
+    <div class="modal-secao">
+      <h4>Gravação</h4>
+      <table class="info">
+        <tr><td>Estado</td><td id="t-rec">—</td></tr>
+        <tr><td>Formato</td><td>fMP4 (.mp4)</td></tr>
+        <tr><td>Pasta</td><td>recordings/drone/</td></tr>
+        <tr><td>Espaço estimado</td><td id="t-espaco">—</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="aviso-toast" id="toast"></div>
+
+<script>
+/******************************************************************************
+ * DLCast — Painel de controle
+ *
+ * O painel descobre sozinho o endereço do servidor pela barra de endereços,
+ * então funciona igual no Mac e no celular sem editar nada.
+ *
+ * O vídeo é reproduzido por um cliente WebRTC próprio (padrão WHEP) em vez de
+ * um iframe. Isso é o que permite ler as estatísticas reais da conexão —
+ * atraso, perda de pacotes, quadros por segundo — que um iframe esconderia.
+ ******************************************************************************/
+
+const HOST     = location.hostname || '127.0.0.1';
+const STREAM   = 'drone';
+const API      = `http://${HOST}:9997/v3`;
+const URL_RTMP = `rtmp://${HOST}:1935/${STREAM}`;
+
+const LINKS = {
+  rtsp:   `rtsp://${HOST}:8554/${STREAM}`,
+  webrtc: `http://${HOST}:8889/${STREAM}`,
+  hls:    `http://${HOST}:8888/${STREAM}/index.m3u8`,
+  srt:    `srt://${HOST}:8890?streamid=read:${STREAM}`,
+};
+
+// Preenche os endereços na tela
+document.getElementById('url-rtmp').textContent = URL_RTMP;
+document.getElementById('url-sem-chave').textContent = `rtmp://${HOST}:1935/`;
+document.getElementById('u-rtsp').textContent   = LINKS.rtsp;
+document.getElementById('u-webrtc').textContent = LINKS.webrtc;
+document.getElementById('u-hls').textContent    = LINKS.hls;
+document.getElementById('u-srt').textContent    = LINKS.srt;
+
+// Estado da aplicação
+let pc = null;                 // conexão WebRTC
+let conectando = false;
+let gravando = false;
+let inicioTransmissao = null;  // marca de tempo para o cronômetro
+let ultimoBytes = 0;
+let ultimoInstante = 0;
+let bitrateAtual = 0;          // em kbps
+let statsWebRTC = {};
+
+/* ========================================================================
+ * UTILIDADES
+ * ===================================================================== */
+
+function formatarTamanho(b) {
+  if (!b) return '0 B';
+  const u = ['B','KB','MB','GB','TB'];
+  let i = 0;
+  while (b >= 1024 && i < u.length-1) { b /= 1024; i++; }
+  return b.toFixed(b < 10 && i > 0 ? 1 : 0) + ' ' + u[i];
+}
+
+function formatarTempo(segundos) {
+  const h = Math.floor(segundos/3600);
+  const m = Math.floor((segundos%3600)/60);
+  const s = Math.floor(segundos%60);
+  return [h,m,s].map(n => String(n).padStart(2,'0')).join(':');
+}
+
+function mostrarAviso(texto, erro = false) {
+  const t = document.getElementById('toast');
+  t.textContent = texto;
+  t.className = 'aviso-toast visivel' + (erro ? ' erro' : '');
+  setTimeout(() => { t.className = 'aviso-toast' + (erro ? ' erro' : ''); }, 2600);
+}
+
+async function copiarTexto(texto, botao) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    if (botao) {
+      const original = botao.textContent;
+      botao.textContent = 'Copiado!';
+      botao.classList.add('feito');
+      setTimeout(() => { botao.textContent = original; botao.classList.remove('feito'); }, 1800);
+    }
+    mostrarAviso('Link copiado');
+  } catch {
+    // Navegadores bloqueiam a cópia automática fora de HTTPS em alguns casos.
+    mostrarAviso('Copie manualmente: ' + texto, true);
+  }
+}
+
+/* ========================================================================
+ * PLAYER WEBRTC (padrão WHEP)
+ *
+ * WHEP é o protocolo padrão para *receber* vídeo por WebRTC: enviamos nossa
+ * proposta de conexão (SDP) por HTTP POST e o servidor responde com a dele.
+ * ===================================================================== */
+
+async function conectarVideo() {
+  if (conectando || pc) return;
+  conectando = true;
+
+  try {
+    pc = new RTCPeerConnection({ iceServers: [] });
+
+    // Declaramos que só queremos RECEBER áudio e vídeo, nunca enviar.
+    pc.addTransceiver('video', { direction: 'recvonly' });
+    pc.addTransceiver('audio', { direction: 'recvonly' });
+
+    pc.ontrack = (evento) => {
+      const video = document.getElementById('video');
+      if (video.srcObject !== evento.streams[0]) {
+        video.srcObject = evento.streams[0];
+        video.style.display = 'block';
+        document.getElementById('sem-sinal').style.display = 'none';
+        document.getElementById('timecode').style.display = 'block';
+        if (!inicioTransmissao) inicioTransmissao = Date.now();
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (pc && ['failed','disconnected','closed'].includes(pc.connectionState)) {
+        desconectarVideo();
+      }
+    };
+
+    const oferta = await pc.createOffer();
+    await pc.setLocalDescription(oferta);
+
+    // Espera o navegador terminar de descobrir os caminhos de rede possíveis.
+    await new Promise((resolve) => {
+      if (pc.iceGatheringState === 'complete') return resolve();
+      const verificar = () => {
+        if (pc.iceGatheringState === 'complete') {
+          pc.removeEventListener('icegatheringstatechange', verificar);
+          resolve();
+        }
+      };
+      pc.addEventListener('icegatheringstatechange', verificar);
+      setTimeout(resolve, 2500); // não trava se algum caminho demorar
+    });
+
+    const resposta = await fetch(`http://${HOST}:8889/${STREAM}/whep`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/sdp' },
+      body: pc.localDescription.sdp,
+    });
+
+    if (!resposta.ok) throw new Error('servidor recusou: ' + resposta.status);
+
+    const sdpResposta = await resposta.text();
+    await pc.setRemoteDescription({ type: 'answer', sdp: sdpResposta });
+
+  } catch (e) {
+    desconectarVideo();
+  } finally {
+    conectando = false;
+  }
+}
+
+function desconectarVideo() {
+  if (pc) { try { pc.close(); } catch {} pc = null; }
+  const video = document.getElementById('video');
+  video.srcObject = null;
+  video.style.display = 'none';
+  document.getElementById('sem-sinal').style.display = 'flex';
+  document.getElementById('timecode').style.display = 'none';
+  inicioTransmissao = null;
+  statsWebRTC = {};
+}
+
+function reconectar() {
+  desconectarVideo();
+  mostrarAviso('Reconectando…');
+  setTimeout(conectarVideo, 400);
+}
+
+function telaCheia() {
+  const v = document.getElementById('video');
+  if (v.requestFullscreen) v.requestFullscreen();
+  else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+}
+
+/* ========================================================================
+ * ESTATÍSTICAS DA CONEXÃO WEBRTC
+ *
+ * É daqui que saem os números de atraso, perda e quadros por segundo.
+ * ===================================================================== */
+
+async function lerEstatisticas() {
+  if (!pc) { statsWebRTC = {}; return; }
+
+  try {
+    const relatorio = await pc.getStats();
+    const s = {};
+
+    relatorio.forEach((r) => {
+      if (r.type === 'inbound-rtp' && r.kind === 'video') {
+        s.largura     = r.frameWidth;
+        s.altura      = r.frameHeight;
+        s.fps         = r.framesPerSecond;
+        s.perdidos    = r.packetsLost;
+        s.recebidos   = r.packetsReceived;
+        s.jitter      = r.jitter;
+        s.descartados = r.framesDropped;
+
+        // O buffer de reprodução é a maior parte do atraso perceptível.
+        // A média se obtém dividindo o acumulado pela contagem de quadros.
+        if (r.jitterBufferDelay && r.jitterBufferEmittedCount) {
+          s.buffer = r.jitterBufferDelay / r.jitterBufferEmittedCount;
+        }
+      }
+      if (r.type === 'candidate-pair' && r.state === 'succeeded' && r.currentRoundTripTime != null) {
+        s.rtt = r.currentRoundTripTime;
+      }
+      if (r.type === 'codec' && r.mimeType && r.mimeType.startsWith('video/')) {
+        s.codec = r.mimeType.replace('video/','');
+      }
+    });
+
+    statsWebRTC = s;
+  } catch {
+    statsWebRTC = {};
+  }
+}
+
+/* ========================================================================
+ * GRAVAÇÃO — liga e desliga pela API do servidor
+ * ===================================================================== */
+
+let ambiente = null;        // pastas reais deste computador
+let pastaEscolhida = null;  // destino selecionado para a gravação
+
+/** Carrega a lista de pastas que o script djio descobriu no sistema. */
+async function carregarAmbiente() {
+  try {
+    const r = await fetch('ambiente.json', { cache: 'no-store' });
+    if (r.ok) ambiente = await r.json();
+  } catch {}
+}
+
+/**
+ * O botão de gravar tem dois comportamentos: se já está gravando, para na
+ * hora; se não está, abre o modal para escolher onde salvar. Perguntar o
+ * destino antes evita encher a pasta do projeto sem o usuário perceber.
+ */
+function alternarGravacao() {
+  if (gravando) { pararGravacao(); return; }
+  abrirModalPasta();
+}
+
+function abrirModalPasta() {
+  const lista = document.getElementById('lista-pastas');
+
+  // Recupera a última pasta usada, para não perguntar duas vezes o óbvio.
+  let ultima = null;
+  try { ultima = localStorage.getItem('djio_pasta'); } catch {}
+
+  const opcoes = [];
+
+  if (ambiente) {
+    opcoes.push({
+      rotulo: 'Pasta do projeto',
+      caminho: ambiente.padrao,
+      obs: 'padrão — dentro da pasta do projeto',
+    });
+    (ambiente.pastas || []).forEach(p => {
+      opcoes.push({
+        rotulo: p.rotulo,
+        caminho: p.caminho + '/DLCast',
+        obs: p.caminho,
+      });
+    });
+  } else {
+    opcoes.push({ rotulo: 'Pasta do projeto', caminho: './recordings', obs: 'padrão' });
+  }
+
+  lista.innerHTML = opcoes.map((o, i) => `
+    <div class="opcao-pasta ${(ultima === o.caminho || (!ultima && i === 0)) ? 'ativa' : ''}"
+         data-caminho="${o.caminho}" onclick="escolherPasta(this)">
+      <div>
+        <div style="font-weight:700; font-size:14px">${o.rotulo}</div>
+        <div style="font-size:11.5px; color:var(--suave); font-family:ui-monospace,Menlo,monospace">${o.obs}</div>
+      </div>
+      <div class="marca">✓</div>
+    </div>
+  `).join('');
+
+  pastaEscolhida = ultima || opcoes[0].caminho;
+
+  // Atualiza a estimativa de espaço com o consumo real que está entrando.
+  const est = document.getElementById('est-hora');
+  est.textContent = bitrateAtual
+    ? formatarTamanho(bitrateAtual * 1000 / 8 * 3600)
+    : '~1,8 GB';
+
+  document.getElementById('modal-pasta').classList.add('aberto');
+}
+
+function fecharModalPasta() {
+  document.getElementById('modal-pasta').classList.remove('aberto');
+}
+
+function escolherPasta(elemento) {
+  document.querySelectorAll('.opcao-pasta').forEach(e => e.classList.remove('ativa'));
+  elemento.classList.add('ativa');
+  pastaEscolhida = elemento.dataset.caminho;
+  document.getElementById('pasta-custom').value = '';
+}
+
+/** Aplica a pasta escolhida e liga a gravação, nesta ordem. */
+async function confirmarGravacao() {
+  const personalizada = document.getElementById('pasta-custom').value.trim();
+  const destino = personalizada || pastaEscolhida;
+
+  if (!destino) { mostrarAviso('Escolha uma pasta primeiro', true); return; }
+
+  try {
+    // O MediaMTX monta o nome do arquivo a partir deste molde:
+    // %path vira o nome do stream e o resto vira data e hora.
+    const molde = destino.replace(/\/+$/, '') + '/%path/%Y-%m-%d_%H-%M-%S-%f';
+
+    const r = await fetch(`${API}/config/paths/patch/${STREAM}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ record: true, recordPath: molde }),
+    });
+
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+
+    try { localStorage.setItem('djio_pasta', destino); } catch {}
+
+    gravando = true;
+    atualizarBotaoGravacao();
+    fecharModalPasta();
+    mostrarAviso('Gravando em ' + destino);
+
+  } catch {
+    mostrarAviso('Não foi possível iniciar a gravação', true);
+  }
+}
+
+async function pararGravacao() {
+  const botao = document.getElementById('btn-rec');
+  botao.disabled = true;
+  try {
+    const r = await fetch(`${API}/config/paths/patch/${STREAM}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ record: false }),
+    });
+    if (!r.ok) throw new Error();
+    gravando = false;
+    atualizarBotaoGravacao();
+    mostrarAviso('Gravação encerrada — arquivo salvo');
+  } catch {
+    mostrarAviso('Não foi possível parar a gravação', true);
+  } finally {
+    botao.disabled = false;
+  }
+}
+
+function atualizarBotaoGravacao() {
+  const botao = document.getElementById('btn-rec');
+  const selo  = document.getElementById('selo-rec');
+
+  if (gravando) {
+    botao.textContent = '■ Parar gravação';
+    botao.className = 'gravando';
+    selo.classList.add('ativo');
+  } else {
+    botao.textContent = '● Gravar';
+    botao.className = 'gravar';
+    selo.classList.remove('ativo');
+  }
+}
+
+/** Lê do servidor se a gravação está ligada, para o botão refletir a verdade. */
+async function sincronizarGravacao() {
+  try {
+    const r = await fetch(`${API}/config/paths/get/${STREAM}`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const cfg = await r.json();
+    // A configuração pode herdar o valor padrão; nesse caso vem indefinida.
+    // O padrão do projeto é NÃO gravar até o usuário escolher a pasta.
+    const valor = cfg.record !== undefined ? cfg.record : false;
+    if (valor !== gravando) { gravando = valor; atualizarBotaoGravacao(); }
+  } catch {}
+}
+
+/* ========================================================================
+ * MODAL
+ * ===================================================================== */
+
+function abrirModal()  { document.getElementById('modal').classList.add('aberto'); atualizarModal(); }
+function fecharModal() { document.getElementById('modal').classList.remove('aberto'); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharModal(); });
+
+let dadosPath = null;
+let dadosConexao = null;
+
+function atualizarModal() {
+  if (!document.getElementById('modal').classList.contains('aberto')) return;
+
+  const def = (v) => v != null && v !== '' ? v : '—';
+  const s = statsWebRTC;
+
+  // --- Qualidade ---
+  const trilhaVideo = dadosPath?.tracks2?.find(t => t.codec === 'H264' || t.codec?.startsWith('H26'));
+  const trilhaAudio = dadosPath?.tracks2?.find(t => t.codec?.includes('Audio') || t.codec === 'Opus');
+  const p = trilhaVideo?.codecProps || {};
+
+  document.getElementById('t-resolucao').textContent =
+    p.width ? `${p.width} × ${p.height}` : (s.largura ? `${s.largura} × ${s.altura}` : '—');
+  document.getElementById('t-fps').textContent = s.fps != null ? `${s.fps} fps` : '—';
+  document.getElementById('t-codec').textContent = def(trilhaVideo?.codec || s.codec);
+  document.getElementById('t-perfil').textContent = p.profile ? `${p.profile} / ${p.level}` : '—';
+  document.getElementById('t-audio').textContent = trilhaAudio
+    ? `${trilhaAudio.codec} · ${trilhaAudio.codecProps?.sampleRate || '?'} Hz · ${trilhaAudio.codecProps?.channelCount === 1 ? 'mono' : 'estéreo'}`
+    : '—';
+
+  // --- Rede ---
+  document.getElementById('t-bitrate').textContent = bitrateAtual ? `${bitrateAtual.toFixed(0)} kbps` : '—';
+  document.getElementById('t-porminuto').textContent = bitrateAtual ? formatarTamanho(bitrateAtual*1000/8*60) : '—';
+  document.getElementById('t-porhora').textContent   = bitrateAtual ? formatarTamanho(bitrateAtual*1000/8*3600) : '—';
+  document.getElementById('t-total').textContent   = formatarTamanho(dadosPath?.bytesReceived || 0);
+  document.getElementById('t-enviado').textContent = formatarTamanho(dadosPath?.bytesSent || 0);
+
+  // --- Atraso ---
+  const buffer = s.buffer != null ? s.buffer : null;
+  const rtt    = s.rtt != null ? s.rtt : null;
+  document.getElementById('t-buffer').textContent = buffer != null ? `${(buffer*1000).toFixed(0)} ms` : '—';
+  document.getElementById('t-rtt').textContent    = rtt != null ? `${(rtt*1000).toFixed(0)} ms` : '—';
+  document.getElementById('t-latencia').textContent =
+    buffer != null ? `${((buffer + (rtt||0)/2)*1000).toFixed(0)} ms` : '—';
+  document.getElementById('t-jitter').textContent = s.jitter != null ? `${(s.jitter*1000).toFixed(1)} ms` : '—';
+
+  const totalPacotes = (s.recebidos || 0) + (s.perdidos || 0);
+  const pctPerda = totalPacotes ? ((s.perdidos/totalPacotes)*100).toFixed(2) : '0.00';
+  document.getElementById('t-perdidos').textContent = s.perdidos != null ? `${s.perdidos} (${pctPerda}%)` : '—';
+  document.getElementById('t-descartados').textContent = s.descartados != null ? s.descartados : '—';
+
+  // --- Gravação ---
+  document.getElementById('t-rec').textContent = gravando ? 'Gravando' : 'Parada';
+  document.getElementById('t-espaco').textContent = bitrateAtual
+    ? `${formatarTamanho(bitrateAtual*1000/8*3600)} por hora` : '—';
+}
+
+/* ========================================================================
+ * ATUALIZAÇÃO PRINCIPAL
+ * ===================================================================== */
+
+function definirEstado(online, texto) {
+  document.getElementById('bolinha').className = 'bolinha ' + (online ? 'online' : 'offline');
+  document.getElementById('texto-estado').textContent = texto;
+}
+
+function limparMetricas() {
+  ['m-bitrate','m-resolucao','m-fps','m-latencia','m-perda','m-espectadores']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = '—';
+      el.className = 'valor';
+    });
+  ['e-ip','e-protocolo','e-tempo','e-total','e-video','e-audio']
+    .forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('timecode').textContent = '00:00:00';
+}
+
+async function atualizar() {
+  try {
+    // 1. Estado do stream
+    const rPath = await fetch(`${API}/paths/get/${STREAM}`, { cache: 'no-store' });
+
+    if (!rPath.ok) {
+      definirEstado(true, 'SERVIDOR PRONTO');
+      limparMetricas();
+      desconectarVideo();
+      return;
+    }
+
+    dadosPath = await rPath.json();
+
+    if (!dadosPath.ready) {
+      definirEstado(true, 'SERVIDOR PRONTO');
+      limparMetricas();
+      desconectarVideo();
+      return;
+    }
+
+    definirEstado(true, 'TRANSMITINDO');
+
+    // 2. Conecta o vídeo se ainda não estiver conectado
+    if (!pc && !conectando) conectarVideo();
+
+    // 3. Calcula o consumo real de rede pela variação de bytes no tempo
+    const agora = Date.now();
+    const bytes = dadosPath.bytesReceived || 0;
+    if (ultimoInstante && agora > ultimoInstante) {
+      const deltaBytes = bytes - ultimoBytes;
+      const deltaSeg   = (agora - ultimoInstante) / 1000;
+      if (deltaBytes >= 0 && deltaSeg > 0) {
+        // Suaviza o valor para o número não ficar tremendo na tela.
+        const instantaneo = (deltaBytes * 8) / deltaSeg / 1000;
+        bitrateAtual = bitrateAtual ? bitrateAtual*0.6 + instantaneo*0.4 : instantaneo;
+      }
+    }
+    ultimoBytes = bytes;
+    ultimoInstante = agora;
+
+    // 4. Lê as estatísticas da conexão WebRTC
+    await lerEstatisticas();
+    const s = statsWebRTC;
+
+    // 5. Preenche as métricas da tela
+    const elBitrate = document.getElementById('m-bitrate');
+    elBitrate.textContent = bitrateAtual > 1000
+      ? (bitrateAtual/1000).toFixed(1) + ' Mb/s'
+      : Math.round(bitrateAtual) + ' kb/s';
+    elBitrate.className = 'valor bom';
+
+    const trilhaVideo = dadosPath.tracks2?.find(t => t.codec?.startsWith('H26'));
+    const props = trilhaVideo?.codecProps || {};
+    document.getElementById('m-resolucao').textContent =
+      props.height ? props.height + 'p' : (s.altura ? s.altura + 'p' : '—');
+
+    const elFps = document.getElementById('m-fps');
+    elFps.textContent = s.fps != null ? s.fps : '—';
+    elFps.className = 'valor ' + (s.fps >= 24 ? 'bom' : s.fps >= 15 ? 'medio' : s.fps != null ? 'ruim' : '');
+
+    // Atraso: buffer de reprodução + metade da ida e volta
+    const elLat = document.getElementById('m-latencia');
+    if (s.buffer != null) {
+      const ms = (s.buffer + (s.rtt||0)/2) * 1000;
+      elLat.textContent = ms < 1000 ? Math.round(ms) + ' ms' : (ms/1000).toFixed(1) + ' s';
+      elLat.className = 'valor ' + (ms < 600 ? 'bom' : ms < 1500 ? 'medio' : 'ruim');
+    } else {
+      elLat.textContent = '—'; elLat.className = 'valor';
+    }
+
+    const elPerda = document.getElementById('m-perda');
+    const total = (s.recebidos||0) + (s.perdidos||0);
+    if (total > 0) {
+      const pct = (s.perdidos/total)*100;
+      elPerda.textContent = pct.toFixed(1) + '%';
+      elPerda.className = 'valor ' + (pct < 1 ? 'bom' : pct < 5 ? 'medio' : 'ruim');
+    } else {
+      elPerda.textContent = '—'; elPerda.className = 'valor';
+    }
+
+    document.getElementById('m-espectadores').textContent = (dadosPath.readers || []).length;
+
+    // 6. Cronômetro sobre o vídeo
+    if (dadosPath.readyTime) {
+      const segundos = (Date.now() - new Date(dadosPath.readyTime).getTime()) / 1000;
+      document.getElementById('timecode').textContent = formatarTempo(segundos);
+      document.getElementById('e-tempo').textContent  = formatarTempo(segundos);
+    }
+
+    // 7. Dados do equipamento transmissor
+    try {
+      const rConn = await fetch(`${API}/rtmpconns/list`, { cache: 'no-store' });
+      if (rConn.ok) {
+        const lista = await rConn.json();
+        dadosConexao = (lista.items || []).find(c => c.path === STREAM && c.state === 'publish');
+      }
+    } catch {}
+
+    document.getElementById('e-ip').textContent =
+      dadosConexao ? dadosConexao.remoteAddr.split(':')[0] : '—';
+    document.getElementById('e-protocolo').textContent =
+      dadosPath.source?.type === 'rtmpConn' ? 'RTMP' : (dadosPath.source?.type || '—');
+    document.getElementById('e-total').textContent = formatarTamanho(dadosPath.bytesReceived);
+
+    document.getElementById('e-video').textContent =
+      props.width ? `${props.width}×${props.height} ${trilhaVideo.codec}` : '—';
+
+    const trilhaAudio = dadosPath.tracks2?.find(t => t.codec?.includes('Audio'));
+    document.getElementById('e-audio').textContent = trilhaAudio
+      ? `${trilhaAudio.codec} ${trilhaAudio.codecProps?.sampleRate || ''} Hz`
+      : 'sem áudio';
+
+    atualizarModal();
+
+  } catch (e) {
+    definirEstado(false, 'SERVIDOR DESLIGADO');
+    limparMetricas();
+    desconectarVideo();
+  }
+}
+
+// Início
+carregarAmbiente();
+atualizar();
+sincronizarGravacao();
+setInterval(atualizar, 1000);
+setInterval(sincronizarGravacao, 5000);
+</script>
+</body>
+</html>

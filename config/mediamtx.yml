@@ -1,0 +1,242 @@
+###############################################################################
+# DJIO - Servidor de Transmissao para Drones DJI
+# Configuracao do nucleo de midia (MediaMTX v1.20.0)
+#
+# IMPORTANTE: Todos os caminhos abaixo sao RELATIVOS.
+# O servidor DEVE ser iniciado a partir da raiz do projeto (pasta DJIO/),
+# o que os scripts em scripts/ ja garantem. Isso torna o projeto portatil:
+# qualquer pessoa pode copiar a pasta para o Mac dela e rodar sem editar nada.
+#
+# Documentacao completa: docs/04-INSTALACAO.md e docs/05-OPERACAO.md
+###############################################################################
+
+###############################################################################
+# 1. LOGS
+###############################################################################
+
+# Nivel de detalhe: error | warn | info | debug
+# Use "debug" quando estiver investigando por que o drone nao conecta.
+logLevel: info
+
+# Grava em arquivo E mostra no terminal ao mesmo tempo.
+logDestinations: [stdout, file]
+logFile: ./logs/mediamtx.log
+
+###############################################################################
+# 2. TIMEOUTS E BUFFER
+#
+# O link de video do drone passa por: drone -> radio OcuSync -> controle RC 2
+# -> WiFi -> Mac. Cada salto adiciona jitter (variacao de tempo). Os valores
+# abaixo sao mais tolerantes que o padrao para evitar que o servidor derrube
+# a conexao durante uma oscilacao momentanea do sinal.
+###############################################################################
+
+readTimeout: 20s
+writeTimeout: 20s
+
+# Fila de pacotes por cliente. Aumentada de 512 para 1024 porque o RC 2 envia
+# em rajadas quando o WiFi engasga. Fila maior = menos frames descartados.
+writeQueueSize: 1024
+
+# Tamanho maximo do pacote UDP. 1452 evita fragmentacao de IP em redes com
+# MTU padrao de 1500 bytes.
+udpMaxPayloadSize: 1452
+
+###############################################################################
+# 3. AUTENTICACAO
+#
+# Padrao: LIBERADO na rede local. Motivo: o DJI Fly precisa publicar sem
+# atrito, e um servidor rodando so na sua LAN domestica nao esta exposto
+# a internet.
+#
+# PARA TRAVAR COM SENHA: veja docs/06-SEGURANCA.md - basta trocar o bloco
+# abaixo pelo modelo com usuario/senha documentado la.
+###############################################################################
+
+authMethod: internal
+
+authInternalUsers:
+  # Usuario anonimo com permissao total dentro da LAN.
+  #
+  # ATENCAO: as acoes "api" e "metrics" sao OBRIGATORIAS. Sem elas o
+  # MediaMTX responde "authentication error" a qualquer consulta de status,
+  # e tanto o painel web quanto o comando "djio status" param de funcionar.
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish   # o drone/controle envia video
+      - action: read      # navegador e OBS assistem
+      - action: playback  # rever gravacoes
+      - action: api       # painel web e "djio status" consultam o servidor
+      - action: metrics   # coleta de estatisticas de qualidade
+
+###############################################################################
+# 4. API DE CONTROLE E METRICAS
+#
+# A API HTTP e o que permite ao nosso painel web e ao comando "djio status"
+# saber quem esta transmitindo, ha quanto tempo e a que taxa de bits.
+###############################################################################
+
+api: yes
+apiAddress: :9997
+apiAllowOrigins: ["*"]
+
+# Metricas no formato Prometheus. Util para graficos de qualidade ao longo
+# do tempo (roadmap v2 - ver docs/07-ROADMAP.md).
+metrics: yes
+metricsAddress: :9998
+
+# Servidor de playback: permite rever gravacoes antigas pelo navegador.
+playback: yes
+playbackAddress: :9996
+
+###############################################################################
+# 5. RTMP - A PORTA DE ENTRADA DO DRONE
+#
+# Esta e a peca central do projeto. O DJI Fly no controle RC 2 envia o video
+# para ca usando o endereco:
+#
+#     rtmp://<IP-DO-SEU-MAC>:1935/drone
+#
+# A porta 1935 e o padrao historico do RTMP; o DJI Fly assume essa porta
+# quando ela nao e informada, entao mante-la evita erro de digitacao no campo
+# pequeno da tela do controle.
+###############################################################################
+
+rtmp: yes
+rtmpAddress: :1935
+rtmpEncryption: "no"
+
+###############################################################################
+# 6. SAIDAS - COMO ASSISTIR O QUE O DRONE ENVIA
+#
+# O mesmo video que entra por RTMP sai simultaneamente em varios formatos,
+# sem precisar de conversao manual. Cada um serve a um proposito diferente:
+###############################################################################
+
+# --- HLS: para assistir no navegador, celular ou Smart TV -------------------
+# Latencia tipica: 2 a 5 segundos com Low-Latency HLS.
+# Vantagem: funciona em qualquer aparelho, atravessa qualquer firewall.
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigins: ["*"]
+
+# "lowLatency" ativa o LL-HLS, que corta a latencia de ~15s para ~2-3s.
+hlsVariant: lowLatency
+
+# Segmentos curtos = menos atraso. 1s por segmento, 7 segmentos de historico.
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsSegmentCount: 7
+
+# Mantem o stream pronto mesmo sem ninguem assistindo, para que o primeiro
+# espectador nao espere o buffer encher do zero.
+hlsAlwaysRemux: yes
+
+# --- WebRTC: a saida MAIS RAPIDA (sub-segundo) ------------------------------
+# Latencia tipica: 0,3 a 0,8 segundo. Esta e a que voce usa para pilotar
+# olhando na tela grande, ou para o cliente acompanhar em tempo real.
+webrtc: yes
+webrtcAddress: :8889
+webrtcAllowOrigins: ["*"]
+
+# Porta UDP por onde o video WebRTC realmente trafega.
+webrtcLocalUDPAddress: :8189
+
+# Descobre sozinho os IPs das placas de rede do Mac e os anuncia aos
+# navegadores. E isso que faz funcionar em outros aparelhos da casa sem
+# configuracao manual.
+webrtcIPsFromInterfaces: yes
+
+# --- RTSP: para software profissional (OBS, vMix, VLC, NDI) -----------------
+rtsp: yes
+rtspAddress: :8554
+rtspTransports: [udp, multicast, tcp]
+
+# --- SRT: para retransmitir por internet instavel (4G/5G em campo) ----------
+# SRT recupera pacotes perdidos, entao aguenta rede ruim muito melhor que RTMP.
+srt: yes
+srtAddress: :8890
+
+###############################################################################
+# 7. PADROES APLICADOS A TODOS OS STREAMS
+###############################################################################
+
+pathDefaults:
+  # A fonte e sempre quem publica (o drone), nao um endereco externo.
+  source: publisher
+
+  # Se o sinal cair e o drone reconectar, a nova conexao assume o lugar da
+  # antiga em vez de ser recusada. Essencial: sem isso, uma queda de WiFi
+  # exigiria reiniciar o servidor manualmente no meio do voo.
+  overridePublisher: yes
+
+  # --- GRAVACAO -------------------------------------------------------------
+  # DESLIGADA por padrao, de proposito.
+  #
+  # A gravacao e iniciada pelo botao do painel, que antes pergunta ONDE salvar.
+  # Se ficasse ligada automaticamente, os videos se acumulariam dentro da
+  # pasta do projeto sem o usuario perceber - e videos de voo ocupam quase
+  # 2 GB por hora.
+  #
+  # Para quem prefere a gravacao automatica como rede de seguranca, basta
+  # trocar para "yes" e ajustar recordPath abaixo para uma pasta com espaco.
+  record: no
+
+  # Organizacao: recordings/drone/2026-08-07_14-30-00-000000.mp4
+  recordPath: ./recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+
+  # fMP4 e resistente a falhas: se o Mac desligar no meio, o arquivo
+  # gravado ate ali continua reproduzivel. MPEG-TS tambem serve, mas o
+  # fMP4 abre direto no QuickTime e em editores.
+  recordFormat: fmp4
+
+  # Um arquivo novo a cada 1 hora, evitando arquivos gigantes e
+  # dificeis de manipular.
+  recordSegmentDuration: 1h
+
+  # Apaga gravacoes com mais de 7 dias, para nao lotar o disco sozinho.
+  # Ajuste conforme o espaco que voce tem. Use "0s" para nunca apagar.
+  recordDeleteAfter: 168h
+
+###############################################################################
+# 8. CAMINHOS (STREAMS) DEFINIDOS
+###############################################################################
+
+paths:
+  # --- CAMINHO PRINCIPAL DO DRONE ------------------------------------------
+  # Esta e a rota que voce digita no DJI Fly.
+  # Endereco completo: rtmp://<IP-DO-MAC>:1935/drone
+  drone:
+    # Herda tudo de pathDefaults (gravacao ligada, etc).
+
+  # --- CAMINHO DE TESTE ----------------------------------------------------
+  # Usado pelo script scripts/test-stream.sh para validar o servidor sem
+  # precisar ligar o drone. Nao grava em disco, para nao sujar a pasta
+  # recordings/ com videos de teste.
+  teste:
+    record: no
+
+  # --- OUTRAS FONTES DE VIDEO ----------------------------------------------
+  # O servidor nao e exclusivo de drones: qualquer equipamento que envie RTMP
+  # funciona aqui. Os caminhos abaixo existem para organizar as fontes, cada
+  # uma com seu proprio endereco, para que varias transmitam ao mesmo tempo.
+
+  # Cameras profissionais com RTMP nativo (Sony FX30, PXW-Z200, HXR-NX800...)
+  camera:
+
+  # OBS Studio, vMix, ou qualquer software de producao
+  obs:
+
+  # Celular com Larix Broadcaster ou app equivalente
+  celular:
+
+  # Segunda camera, drone secundario, camera de solo
+  camera2:
+
+  # --- CURINGA -------------------------------------------------------------
+  # Aceita qualquer outro nome de stream que alguem tente publicar.
+  # Deixa o sistema tolerante a erro de digitacao no controle: se voce
+  # digitar "drones" em vez de "drone", ainda assim funciona.
+  all_others:

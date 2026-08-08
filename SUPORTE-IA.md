@@ -50,7 +50,7 @@ nuvem, não tem cadastro e não envia dados para lugar nenhum.
 **O ganho principal:** o atraso cai de 10–30 segundos (transmissão direta
 para plataforma) para **menos de 1 segundo** via WebRTC na rede local.
 
-**Versão atual:** 0.4.0
+**Versão atual:** 0.5.0
 **Licença:** MIT (livre e gratuito)
 
 ---
@@ -171,6 +171,7 @@ stream, graças a uma regra curinga na configuração.
 ./mac/djio url          # mostra o endereço para o equipamento
 ./mac/djio painel       # abre o painel no navegador
 ./mac/djio doctor       # ★ DIAGNÓSTICO AUTOMÁTICO
+./mac/djio rede         # ★ assistente de rede (sem Wi-Fi no local)
 ./mac/djio monitor      # ★ vigia conexões ao vivo
 ./mac/djio test 30      # testa sem o drone, por 30 segundos
 ./mac/djio logs         # acompanha o log em tempo real
@@ -187,6 +188,7 @@ stream, graças a uma regra curinga na configuração.
 .\windows\djio.ps1 url
 .\windows\djio.ps1 painel
 .\windows\djio.ps1 doctor
+.\windows\djio.ps1 rede
 ```
 
 Se o PowerShell recusar a execução do script:
@@ -345,7 +347,62 @@ Se a gravação automática estiver ativada, o parâmetro `recordDeleteAfter` em
 
 ---
 
-### 8.11 — macOS: "desenvolvedor não identificado"
+### 8.11 — Não existe Wi-Fi no local do voo
+
+**Cenário:** fazenda, obra, mata — sem rede nenhuma. O controle do drone
+precisa de uma rede para alcançar o computador.
+
+**O sistema tem um assistente para isso:**
+
+```bash
+./mac/djio rede              # macOS
+.\windows\djio.ps1 rede      # Windows
+```
+
+Ele detecta se já há rede utilizável, e se não houver, abre a tela de
+configuração e explica o que marcar. Depois:
+
+```bash
+./mac/djio rede --verificar
+```
+
+**As três soluções, da melhor para a mais simples:**
+
+1. **Roteador de viagem** — o mais confiável. Um roteador portátil ligado a
+   uma bateria USB. Não consome o computador e tem alcance melhor.
+
+2. **O computador vira roteador** — macOS: Ajustes → Geral → Compartilhamento
+   → Compartilhamento de Internet (compartilhar de uma interface sem uso,
+   para Wi-Fi). Windows: Configurações → Rede → Ponto de acesso móvel.
+
+3. **Cabo de rede** — só para equipamento com porta Ethernet. **O DJI RC 2
+   não tem** — ele só fala Wi-Fi. Serve para câmeras profissionais (Sony
+   FX30, PXW-Z200) e para outro computador rodando OBS.
+
+**Duas limitações importantes que causam confusão:**
+
+*Os sistemas exigem uma "origem" de internet.* Tanto o macOS quanto o Windows
+foram feitos para **compartilhar** internet, não para criar rede isolada. No
+Windows, o método do PowerShell chama `GetInternetConnectionProfile()` e falha
+sem internet. A saída é escolher uma interface qualquer como origem — mesmo
+sem cabo, mesmo sem internet. A rede sobe do mesmo jeito e funciona para
+tráfego local, que é tudo o que o DLCast precisa.
+
+*Uma placa Wi-Fi não faz dois papéis.* Ao criar a rede, o computador **sai do
+Wi-Fi atual**. Em campo isso não atrapalha; testando em casa, ele perde a
+internet enquanto o hotspot estiver ligado.
+
+**Faixas de endereço que indicam que funcionou:**
+
+| Faixa | Significa |
+|---|---|
+| `192.168.2.x` | Compartilhamento do macOS ativo |
+| `192.168.137.x` | Ponto de acesso do Windows ativo |
+| `169.254.x.x` | **Falhou** — placa ativa mas sem roteador nem compartilhamento |
+
+---
+
+### 8.12 — macOS: "desenvolvedor não identificado"
 
 **Solução:** clicar com o botão direito no arquivo `.command` e escolher
 **Abrir**. Acontece apenas na primeira vez. É proteção do macOS contra
@@ -367,6 +424,7 @@ cd ~/Desktop/DJIO && ./mac/djio doctor
 Windows:
 ```powershell
 .\windows\djio.ps1 doctor
+.\windows\djio.ps1 rede
 ```
 
 Ele verifica: servidor presente, dependências opcionais, arquivos do projeto,
@@ -487,7 +545,7 @@ entrar em contato com o desenvolvedor, **enviando junto**:
 ## FICHA TÉCNICA RESUMIDA
 
 ```
-Nome:          DLCast v0.4.0
+Nome:          DLCast v0.5.0
 Autor:         Daniel Júnior — DL Mídia
 Licença:       MIT (livre, gratuito, uso comercial permitido)
 Sistemas:      macOS 12+ (Apple Silicon e Intel), Windows 10/11

@@ -7,7 +7,7 @@
 De drones e câmeras direto para o seu computador — com menos de 1 segundo de atraso.
 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-3fb950?style=flat-square)](LICENSE)
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.4.0-58a6ff?style=flat-square)](docs/04-COMO-FUNCIONA-POR-DENTRO.md)
+[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.5.0-58a6ff?style=flat-square)](docs/04-COMO-FUNCIONA-POR-DENTRO.md)
 [![macOS](https://img.shields.io/badge/macOS-12%2B-lightgrey?style=flat-square&logo=apple)](#-instalação)
 [![Windows](https://img.shields.io/badge/Windows-10%2F11-0078d4?style=flat-square&logo=windows)](#-instalação)
 [![Sem instalação](https://img.shields.io/badge/instala%C3%A7%C3%A3o-n%C3%A3o%20precisa-3fb950?style=flat-square)](#-instalação)
@@ -279,6 +279,7 @@ Quem preferir o terminal:
 ./mac/djio painel         # abre o painel
 ./mac/djio url            # mostra o endereço para o DJI Fly
 ./mac/djio status         # quem está transmitindo agora
+./mac/djio rede           # cria uma rede própria (sem Wi-Fi no local)
 ./mac/djio monitor        # vigia conexões ao vivo (diagnóstico)
 ./mac/djio test 30        # testa sem o drone, por 30 segundos
 ./mac/djio doctor         # diagnóstico completo
@@ -287,6 +288,55 @@ Quem preferir o terminal:
 ```
 
 No Windows, o equivalente é `.\windows\djio.ps1 <comando>`.
+
+---
+
+## Voando onde não tem Wi-Fi
+
+Fazenda, obra, mata fechada — sem rede nenhuma. Como o controle do drone
+precisa de uma rede para alcançar o computador, o DLCast traz um assistente:
+
+```bash
+./mac/djio rede
+```
+
+Ele verifica se já dá para usar a rede atual e, se não houver, abre a tela de
+configuração do sistema e explica exatamente o que marcar — em macOS ou
+Windows.
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 1. Roteador de viagem
+
+**O mais confiável.** Um roteador de bolso ligado a uma bateria USB. Não
+consome o computador e tem alcance melhor.
+
+</td>
+<td width="33%" valign="top">
+
+### 2. Computador vira roteador
+
+**Sem hardware extra.** O assistente guia pelo Compartilhamento de Internet
+(macOS) ou Ponto de Acesso Móvel (Windows).
+
+</td>
+<td width="33%" valign="top">
+
+### 3. Cabo de rede
+
+**Só para câmeras.** O RC 2 não tem porta Ethernet — serve para Sony FX30,
+PXW-Z200 e afins.
+
+</td>
+</tr>
+</table>
+
+> **Duas coisas que confundem:** os sistemas operacionais foram feitos para
+> *compartilhar internet*, não para criar rede isolada — por isso é preciso
+> escolher uma interface como origem, mesmo sem cabo nem internet. E a placa
+> Wi-Fi não faz dois papéis: ao criar a rede, o computador sai do Wi-Fi atual.
 
 ---
 

@@ -575,6 +575,199 @@ cmd_restream() {
 }
 
 ###############################################################################
+# COMANDO: rede
+#
+# Assistente para criar uma rede propria quando nao existe Wi-Fi no local.
+#
+# POR QUE ISSO EXISTE: em campo aberto - fazenda, obra, mata - nao ha rede
+# nenhuma. Sem uma rede, o controle do drone nao tem como alcancar o
+# computador. A saida e transformar o proprio computador em roteador.
+#
+# POR QUE NAO E AUTOMATICO: ativar o Compartilhamento de Internet por linha
+# de comando exige senha de administrador e mexe em arquivos internos do
+# macOS que a Apple reorganiza a cada versao. Um comando desses quebraria no
+# primeiro update do sistema, e o usuario ficaria sem entender o motivo.
+# Guiar pela tela e mais lento uma vez, mas funciona sempre.
+###############################################################################
+cmd_rede() {
+  titulo "CRIAR UMA REDE SEM DEPENDER DE WI-FI"
+
+  local ip; ip="$(detectar_ip)"
+
+  # --- Primeiro: sera que ja da para usar a rede atual? ---------------------
+  if [ -n "$ip" ]; then
+    case "$ip" in
+      169.254.*)
+        aviso "Voce tem um IP de auto-configuracao ($ip)."
+        info "Isso significa que a placa esta ativa mas nao recebeu endereco"
+        info "de nenhum roteador. Siga o assistente abaixo."
+        echo
+        ;;
+      *)
+        ok "Voce JA esta numa rede utilizavel."
+        echo
+        echo "  Seu endereco : ${NEG}${ip}${FIM}"
+        echo "  Para o drone : ${NEG}${VERDE}rtmp://${ip}:1935/${STREAM_PADRAO}${FIM}"
+        echo
+        info "Nao precisa criar rede nenhuma. Basta conectar o controle do"
+        info "drone nesta mesma rede e usar o endereco acima."
+        echo
+        echo "  Se esta rede for de um roteador de viagem ou do hotspot de um"
+        echo "  celular, esta perfeito - e exatamente o cenario ideal."
+        echo
+        printf "  Quer criar uma rede propria mesmo assim? (s/N) "
+        read -r resposta
+        case "$resposta" in
+          s|S|sim|SIM) ;;
+          *) info "Mantendo a rede atual."; return 0 ;;
+        esac
+        echo
+        ;;
+    esac
+  else
+    aviso "Nenhuma rede detectada neste computador."
+    echo
+  fi
+
+  # --- As opcoes ------------------------------------------------------------
+  echo "${NEG}  TRES FORMAS DE RESOLVER, DA MELHOR PARA A MAIS SIMPLES:${FIM}"
+  echo
+  echo "  ${NEG}1. Roteador de viagem${FIM}  (mais confiavel)"
+  echo "     Um roteador portatil de bolso, ligado a uma bateria USB."
+  echo "     Custa pouco, nao consome o computador e o alcance e melhor."
+  echo "     Ligue o Mac e o controle nele: acabou, nada mais a fazer."
+  echo
+  echo "  ${NEG}2. Transformar este Mac em roteador${FIM}  (sem hardware extra)"
+  echo "     O assistente abaixo mostra como. Leva um minuto."
+  echo
+  echo "  ${NEG}3. Cabo de rede${FIM}  (so para cameras, nao serve para o drone)"
+  echo "     Ver detalhes no fim deste texto."
+  echo
+  echo "  -----------------------------------------------------------"
+  echo
+
+  printf "  Quer que eu abra a tela para transformar o Mac em roteador? (S/n) "
+  read -r abrir
+
+  case "$abrir" in
+    n|N|nao|NAO)
+      info "Tudo bem. As instrucoes continuam abaixo."
+      ;;
+    *)
+      # Abre direto o painel de Compartilhamento das Configuracoes do Sistema.
+      open "x-apple.systempreferences:com.apple.Sharing-Settings.extension" 2>/dev/null \
+        || open "/System/Library/PreferencePanes/SharingPref.prefPane" 2>/dev/null \
+        || aviso "Abra manualmente: Ajustes do Sistema > Geral > Compartilhamento"
+      ok "Tela de Compartilhamento aberta."
+      ;;
+  esac
+
+  echo
+  titulo "O QUE MARCAR NA TELA"
+  echo
+  echo "  ${NEG}1.${FIM} Encontre ${NEG}Compartilhamento de Internet${FIM} na lista"
+  echo
+  echo "  ${NEG}2.${FIM} Clique no ${NEG}(i)${FIM} ao lado, para abrir as opcoes"
+  echo
+  echo "  ${NEG}3.${FIM} Em ${NEG}\"Compartilhar sua conexao de:\"${FIM} escolha uma"
+  echo "     interface que NAO esteja em uso. Neste Mac servem:"
+
+  # Lista as interfaces que podem servir de "origem fantasma": elas nao
+  # precisam ter internet, so precisam existir para o macOS aceitar.
+  networksetup -listallhardwareports 2>/dev/null \
+    | grep -B1 "Device: en[1-9]" \
+    | grep "Hardware Port" \
+    | sed 's/Hardware Port: /       - /' | head -4
+  echo "       - Ponte Thunderbolt"
+  echo
+  echo "     ${AMAR}Nao se preocupe:${FIM} ela nao precisa ter internet."
+  echo "     O objetivo aqui e so criar a rede, nao dar internet a ninguem."
+  echo
+  echo "  ${NEG}4.${FIM} Em ${NEG}\"Para computadores usando:\"${FIM} marque ${NEG}Wi-Fi${FIM}"
+  echo
+  echo "  ${NEG}5.${FIM} Clique em ${NEG}\"Opcoes de Wi-Fi...\"${FIM} e defina:"
+  echo "       Nome da rede : ${VERDE}DLCast${FIM}"
+  echo "       Seguranca    : WPA2/WPA3 Personal"
+  echo "       Senha        : escolha uma com 8+ caracteres"
+  echo
+  echo "  ${NEG}6.${FIM} Ative a chave do ${NEG}Compartilhamento de Internet${FIM}"
+  echo "     e confirme em \"Iniciar\""
+  echo
+  echo "  ${AMAR}${NEG}ATENCAO:${FIM} ao ligar isso, o Mac ${NEG}sai do Wi-Fi atual${FIM}."
+  echo "  A placa nao consegue criar uma rede e usar outra ao mesmo tempo."
+  echo "  Em campo isso nao atrapalha, mas testando em casa voce perde a"
+  echo "  internet enquanto estiver ligado."
+  echo
+  echo "  -----------------------------------------------------------"
+  echo
+  info "Depois de ativar, conecte o controle do drone na rede ${NEG}DLCast${FIM}"
+  info "e rode:  ${NEG}./mac/djio rede --verificar${FIM}"
+  echo
+  echo "  ${NEG}Alternativa 3 - cabo de rede${FIM}"
+  echo "  So funciona com equipamento que tenha porta de rede. O controle"
+  echo "  DJI RC 2 ${NEG}nao tem${FIM} - ele so fala Wi-Fi. Serve para cameras"
+  echo "  profissionais (Sony FX30, PXW-Z200) e para outro computador"
+  echo "  rodando OBS. Ligue os dois por cabo, use um adaptador USB-C se"
+  echo "  precisar, e configure IP manual nos dois lados:"
+  echo "       Mac    : 10.0.0.1   mascara 255.255.255.0"
+  echo "       Camera : 10.0.0.2   mascara 255.255.255.0"
+  echo "  O endereco do servidor passa a ser rtmp://10.0.0.1:1935/camera"
+  echo
+}
+
+###############################################################################
+# COMANDO: rede --verificar
+#
+# Confirma se a rede subiu e mostra o endereco para o equipamento.
+###############################################################################
+cmd_rede_verificar() {
+  titulo "VERIFICANDO A REDE"
+
+  local ip; ip="$(detectar_ip)"
+
+  if [ -z "$ip" ]; then
+    erro "Nenhum endereco de rede detectado."
+    info "O compartilhamento nao foi ativado, ou a placa ainda esta subindo."
+    info "Aguarde alguns segundos e tente de novo."
+    return 1
+  fi
+
+  case "$ip" in
+    169.254.*)
+      aviso "Endereco de auto-configuracao ($ip)."
+      info "A placa esta ativa mas nao ha roteador nem compartilhamento."
+      return 1
+      ;;
+    192.168.2.*)
+      ok "Compartilhamento de Internet do macOS esta ATIVO."
+      echo
+      echo "  A faixa 192.168.2.x e a que o macOS usa ao compartilhar."
+      ;;
+    *)
+      ok "Rede ativa."
+      ;;
+  esac
+
+  echo
+  echo "  Endereco deste Mac: ${NEG}${ip}${FIM}"
+  echo
+  echo "  ${NEG}DIGITE ISTO NO DJI FLY:${FIM}"
+  echo "    ${NEG}${VERDE}rtmp://${ip}:1935/${STREAM_PADRAO}${FIM}"
+  echo
+  echo "  Assistir no navegador:"
+  echo "    http://${ip}:${WEBRTC_PORT}/${STREAM_PADRAO}"
+  echo
+
+  if esta_rodando; then
+    ok "O servidor ja esta no ar, pronto para receber."
+  else
+    aviso "O servidor esta parado."
+    info "Ligue com: ./mac/djio start"
+  fi
+  echo
+}
+
+###############################################################################
 # COMANDO: monitor
 #
 # Fica de vigia mostrando, ao vivo, QUALQUER tentativa de conexao que chegue
@@ -793,6 +986,10 @@ ${NEG}OPERACAO DIARIA${FIM}
     ${VERDE}watch${FIM} [stream]     Abre o video no navegador
     ${VERDE}painel${FIM}             Abre o painel de controle visual
 
+${NEG}SEM WI-FI NO LOCAL?${FIM}
+    ${VERDE}rede${FIM}               Assistente para criar uma rede propria
+    ${VERDE}rede --verificar${FIM}   Confere se a rede subiu e mostra o endereco
+
 ${NEG}TRANSMISSAO${FIM}
     ${VERDE}restream${FIM} <plat> <chave>
                        Repassa o video para YouTube, Facebook, Twitch...
@@ -831,6 +1028,13 @@ case "$comando" in
   watch|assistir)     cmd_watch "$@" ;;
   painel|dashboard)   cmd_painel "$@" ;;
   restream|repassar)  cmd_restream "$@" ;;
+  rede|wifi|hotspot)
+    # "rede --verificar" confere se a rede subiu; "rede" abre o assistente.
+    case "${1:-}" in
+      --verificar|-v|verificar) cmd_rede_verificar ;;
+      *)                        cmd_rede ;;
+    esac
+    ;;
   monitor|vigia)      cmd_monitor "$@" ;;
   logs|log)           cmd_logs "$@" ;;
   gravacoes|rec)      cmd_gravacoes "$@" ;;

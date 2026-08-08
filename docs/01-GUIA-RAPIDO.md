@@ -88,6 +88,32 @@ Deve aparecer `* drone` com os bytes recebidos aumentando.
 
 ---
 
+## Voando onde não tem Wi-Fi
+
+Fazenda, obra, mata — sem rede nenhuma. O controle precisa de uma rede para
+alcançar o computador.
+
+```bash
+./mac/djio rede
+```
+
+O assistente confere se já dá para usar a rede atual e, se não, abre a tela
+certa e explica o que marcar. Depois de ativar, confirme com:
+
+```bash
+./mac/djio rede --verificar
+```
+
+**A solução mais confiável em campo é um roteador de viagem** — daqueles de
+bolso, ligados a uma bateria USB. Não consome o computador, tem alcance melhor
+e não derruba o Wi-Fi da máquina.
+
+> **Atenção:** quando o computador vira roteador, ele **sai do Wi-Fi atual**.
+> A placa não consegue criar uma rede e usar outra ao mesmo tempo. Em campo
+> isso não atrapalha, mas testando em casa você perde a internet.
+
+---
+
 ## Durante o voo
 
 | O que fazer | Comando |

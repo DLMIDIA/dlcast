@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast — Central de Documentação</title>
+<style>
+  :root {
+    --fundo:#0d1117; --cartao:#161b22; --fundo2:#0b0f14; --borda:#30363d;
+    --texto:#e6edf3; --suave:#8b949e; --verde:#3fb950; --vermelho:#f85149;
+    --amarelo:#d29922; --azul:#58a6ff; --roxo:#bc8cff;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--fundo); color:var(--texto); line-height:1.7;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    padding:26px 16px 70px;
+  }
+  .container { max-width:980px; margin:0 auto; }
+
+  nav { display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+        margin-bottom:30px; padding-bottom:18px; border-bottom:1px solid var(--borda); }
+  nav a { color:var(--suave); text-decoration:none; font-size:13.5px; font-weight:600;
+          padding:8px 15px; border-radius:8px; border:1px solid transparent; }
+  nav a:hover { color:var(--texto); background:var(--cartao); }
+  nav a.ativo { color:var(--azul); border-color:var(--borda); background:var(--cartao); }
+
+  .topo { text-align:center; margin-bottom:30px; }
+  .topo .logo { font-size:38px; font-weight:800; letter-spacing:-1.5px; margin-bottom:6px; }
+  .topo .logo .dl { color:var(--azul); }
+  .topo h1 { font-size:20px; font-weight:700; margin-bottom:8px; }
+  .topo p { color:var(--suave); font-size:15px; max-width:520px; margin:0 auto; }
+
+  /* ---------- Busca ---------- */
+  .busca-caixa { max-width:520px; margin:0 auto 34px; position:relative; }
+  .busca-caixa input {
+    width:100%; padding:13px 16px 13px 42px; background:var(--cartao);
+    border:1px solid var(--borda); border-radius:11px; color:var(--texto);
+    font-size:15px; font-family:inherit;
+  }
+  .busca-caixa input:focus { outline:none; border-color:var(--azul); }
+  .busca-caixa .lupa { position:absolute; left:15px; top:50%; transform:translateY(-50%);
+                       color:var(--suave); font-size:16px; }
+
+  /* ---------- Trilhas ---------- */
+  h2.secao { font-size:12px; text-transform:uppercase; letter-spacing:1.4px;
+             color:var(--azul); font-weight:800; margin:34px 0 14px; }
+
+  .trilhas { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
+  .trilha {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:14px; padding:22px; transition:border-color .16s;
+  }
+  .trilha:hover { border-color:var(--azul); }
+  .trilha .ic { font-size:28px; margin-bottom:10px; }
+  .trilha h3 { font-size:17px; margin-bottom:5px; }
+  .trilha p { font-size:13.5px; color:var(--suave); margin-bottom:14px; }
+  .trilha ol { list-style:none; counter-reset:t; }
+  .trilha ol li { counter-increment:t; position:relative; padding:0 0 8px 26px; font-size:13.5px; }
+  .trilha ol li::before {
+    content:counter(t); position:absolute; left:0; top:2px;
+    width:18px; height:18px; background:var(--azul); color:#04121f;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:800;
+  }
+  .trilha a { color:var(--azul); text-decoration:none; }
+  .trilha a:hover { text-decoration:underline; }
+
+  /* ---------- Lista de documentos ---------- */
+  .doc {
+    display:flex; gap:16px; align-items:flex-start;
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:12px; padding:18px 20px; margin-bottom:11px;
+    text-decoration:none; color:inherit; transition:border-color .15s, transform .15s;
+  }
+  .doc:hover { border-color:var(--azul); transform:translateX(3px); }
+  .doc .num {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:8px;
+    min-width:42px; height:42px; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:14px; color:var(--azul); flex-shrink:0;
+  }
+  .doc .info { flex:1; min-width:0; }
+  .doc .titulo { font-size:15.5px; font-weight:700; margin-bottom:3px; }
+  .doc .desc { font-size:13.5px; color:var(--suave); }
+  .doc .etiquetas { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .etiqueta { font-size:10.5px; padding:2px 8px; border-radius:5px; font-weight:700;
+              background:var(--fundo2); color:var(--suave); border:1px solid var(--borda); }
+  .etiqueta.essencial { background:rgba(63,185,80,.15); color:var(--verde); border-color:rgba(63,185,80,.3); }
+  .etiqueta.campo { background:rgba(210,153,34,.15); color:var(--amarelo); border-color:rgba(210,153,34,.3); }
+  .etiqueta.tecnico { background:rgba(188,140,255,.15); color:var(--roxo); border-color:rgba(188,140,255,.3); }
+
+  .vazio { text-align:center; color:var(--suave); padding:34px; display:none; }
+
+  /* ---------- Ajuda rápida ---------- */
+  .ajuda {
+    background:linear-gradient(135deg, rgba(248,81,73,.09), rgba(210,153,34,.06));
+    border:1px solid rgba(248,81,73,.25); border-radius:14px; padding:24px; margin-top:16px;
+  }
+  .ajuda h3 { font-size:17px; margin-bottom:12px; }
+  .ajuda ol { list-style:none; counter-reset:a; }
+  .ajuda ol li { counter-increment:a; position:relative; padding:0 0 12px 32px; font-size:14.5px; }
+  .ajuda ol li::before {
+    content:counter(a); position:absolute; left:0; top:1px;
+    width:22px; height:22px; background:var(--vermelho); color:#fff;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800;
+  }
+  code {
+    background:var(--fundo2); padding:2px 7px; border-radius:5px;
+    font-family:ui-monospace,Menlo,monospace; font-size:13px; color:var(--verde);
+  }
+
+  /* ---------- Contato ---------- */
+  .contato-caixa {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:14px; padding:26px; text-align:center; margin-top:16px;
+  }
+  .contato-caixa h3 { font-size:19px; margin-bottom:6px; }
+  .contato-caixa p { color:var(--suave); font-size:14px; margin-bottom:18px; }
+  .botoes-contato { display:flex; gap:11px; flex-wrap:wrap; justify-content:center; }
+  .btn-contato {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:12px 22px; border-radius:10px; text-decoration:none;
+    font-weight:700; font-size:14.5px; border:1px solid var(--borda);
+    color:var(--texto); background:var(--fundo2); transition:all .15s;
+  }
+  .btn-contato:hover { transform:translateY(-2px); }
+  .btn-contato.zap { background:#25D366; color:#04121f; border-color:#25D366; }
+  .btn-contato.site { background:var(--azul); color:#04121f; border-color:var(--azul); }
+
+  footer { text-align:center; color:var(--suave); font-size:12.5px;
+           margin-top:40px; padding-top:22px; border-top:1px solid var(--borda); line-height:2; }
+  footer a { color:var(--azul); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav>
+    <a href="index.html">Comece por aqui</a>
+    <a href="painel.html">Painel</a>
+    <a href="documentacao.html" class="ativo">Documentação</a>
+    <a href="instalar-windows.html">Windows</a>
+    <a href="sobre.html">Sobre</a>
+  </nav>
+
+  <div class="topo">
+    <div class="logo"><span class="dl">DL</span>Cast</div>
+    <h1>Central de Documentação</h1>
+    <p>Tudo sobre o sistema, organizado por objetivo. Comece pela trilha que
+       combina com o que você precisa agora.</p>
+  </div>
+
+  <div class="busca-caixa">
+    <span class="lupa">⌕</span>
+    <input type="text" id="busca" placeholder="Buscar na documentação…"
+           autocomplete="off" oninput="filtrar()">
+  </div>
+
+  <!-- ============ TRILHAS ============ -->
+  <h2 class="secao">Por onde começar</h2>
+  <div class="trilhas">
+
+    <div class="trilha">
+      <div class="ic">🚁</div>
+      <h3>Vou voar hoje</h3>
+      <p>Preciso colocar no ar agora.</p>
+      <ol>
+        <li><a href="index.html">Configure o equipamento</a></li>
+        <li><a href="../../docs/01-GUIA-RAPIDO.md">Leia o guia de campo</a></li>
+        <li><a href="painel.html">Abra o painel</a></li>
+      </ol>
+    </div>
+
+    <div class="trilha">
+      <div class="ic">🔧</div>
+      <h3>Não está funcionando</h3>
+      <p>Alguma coisa deu errado.</p>
+      <ol>
+        <li><a href="../../docs/06-TROUBLESHOOTING.md">Solução de problemas</a></li>
+        <li>Rode <code>djio doctor</code></li>
+        <li><a href="https://wa.me/5562920016146">Chame no WhatsApp</a></li>
+      </ol>
+    </div>
+
+    <div class="trilha">
+      <div class="ic">📚</div>
+      <h3>Quero entender tudo</h3>
+      <p>Como o sistema funciona por dentro.</p>
+      <ol>
+        <li><a href="../../docs/00-DOCUMENTO-MESTRE.md">Documento Mestre</a></li>
+        <li><a href="../../docs/09-VISAO-E-DECISOES.md">Visão e Decisões</a></li>
+        <li><a href="../../CLAUDE.md">Mapa técnico</a></li>
+      </ol>
+    </div>
+
+    <div class="trilha">
+      <div class="ic">📦</div>
+      <h3>Vou distribuir</h3>
+      <p>Passar o sistema para outras pessoas.</p>
+      <ol>
+        <li><a href="../../docs/08-PUBLICAR-NO-GITHUB.md">Publicar no GitHub</a></li>
+        <li>Rode <code>empacotar.sh</code></li>
+        <li><a href="../../docs/07-ESTRATEGIA-MULTIPLATAFORMA.md">Virar aplicativo</a></li>
+      </ol>
+    </div>
+
+  </div>
+
+  <!-- ============ TODOS OS DOCUMENTOS ============ -->
+  <h2 class="secao">Todos os documentos</h2>
+  <div id="lista-docs">
+
+    <a class="doc" href="../../docs/01-GUIA-RAPIDO.md" data-busca="guia rapido campo voo passo a passo drone dji fly microfone chave rtmp endereco">
+      <div class="num">01</div>
+      <div class="info">
+        <div class="titulo">Guia Rápido de Campo</div>
+        <div class="desc">Uma página para levar no voo. Os 4 passos, o que fazer se der problema e os endereços para assistir.</div>
+        <div class="etiquetas">
+          <span class="etiqueta essencial">essencial</span>
+          <span class="etiqueta campo">levar a campo</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="../../docs/00-DOCUMENTO-MESTRE.md" data-busca="documento mestre completo arquitetura protocolos hardware rc2 air3 instalacao operacao cenarios seguranca backup roadmap">
+      <div class="num">00</div>
+      <div class="info">
+        <div class="titulo">Documento Mestre</div>
+        <div class="desc">A documentação completa: arquitetura, hardware, protocolos explicados, instalação, operação, segurança e roadmap.</div>
+        <div class="etiquetas">
+          <span class="etiqueta essencial">essencial</span>
+          <span class="etiqueta">completo</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="../../docs/06-TROUBLESHOOTING.md" data-busca="problemas erro nao funciona falha conectar microfone wifi firewall isolamento roteador porta ocupada disco cheio travando">
+      <div class="num">06</div>
+      <div class="info">
+        <div class="titulo">Solução de Problemas</div>
+        <div class="desc">O método para descobrir onde está o defeito em 30 segundos, e a solução de cada problema conhecido.</div>
+        <div class="etiquetas">
+          <span class="etiqueta essencial">essencial</span>
+          <span class="etiqueta campo">socorro</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="../../docs/09-VISAO-E-DECISOES.md" data-busca="visao decisoes porque projeto existe historico erros variacoes mediamtx licenca escolhas aprendizados">
+      <div class="num">09</div>
+      <div class="info">
+        <div class="titulo">Visão e Decisões</div>
+        <div class="desc">Por que o projeto existe, o raciocínio de cada escolha técnica, os erros cometidos e 13 variações possíveis.</div>
+        <div class="etiquetas">
+          <span class="etiqueta tecnico">técnico</span>
+          <span class="etiqueta">história</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="../../docs/07-ESTRATEGIA-MULTIPLATAFORMA.md" data-busca="multiplataforma windows mac aplicativo go electron tauri binario compilacao distribuicao">
+      <div class="num">07</div>
+      <div class="info">
+        <div class="titulo">Estratégia Multiplataforma</div>
+        <div class="desc">Como transformar o projeto em aplicativo de clique duplo. Comparação entre Electron, Tauri e Go.</div>
+        <div class="etiquetas">
+          <span class="etiqueta tecnico">técnico</span>
+          <span class="etiqueta">futuro</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="../../docs/08-PUBLICAR-NO-GITHUB.md" data-busca="github publicar repositorio git push token release distribuir compartilhar">
+      <div class="num">08</div>
+      <div class="info">
+        <div class="titulo">Publicar no GitHub</div>
+        <div class="desc">Passo a passo para publicar o projeto, o que sobe e o que fica de fora, e como distribuir os pacotes.</div>
+        <div class="etiquetas">
+          <span class="etiqueta tecnico">técnico</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="index.html" data-busca="instrucoes equipamento drone camera sony obs celular configurar rtmp">
+      <div class="num">▶</div>
+      <div class="info">
+        <div class="titulo">Instruções por Equipamento</div>
+        <div class="desc">Escolha seu equipamento — drone, câmera, OBS ou celular — e veja só o passo a passo dele.</div>
+        <div class="etiquetas">
+          <span class="etiqueta essencial">essencial</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="instalar-windows.html" data-busca="windows instalar bat firewall mediamtx exe ffmpeg python">
+      <div class="num">⊞</div>
+      <div class="info">
+        <div class="titulo">Instalação no Windows</div>
+        <div class="desc">Guia visual com cada passo, o que é obrigatório e o alerta do firewall que trava todo mundo.</div>
+        <div class="etiquetas">
+          <span class="etiqueta">windows</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="doc" href="../../CLAUDE.md" data-busca="mapa tecnico arquitetura pastas portas comandos dependencias decisoes regras">
+      <div class="num">⚙</div>
+      <div class="info">
+        <div class="titulo">Mapa Técnico do Projeto</div>
+        <div class="desc">Estrutura de pastas, portas, comandos, dependências e as decisões técnicas registradas.</div>
+        <div class="etiquetas">
+          <span class="etiqueta tecnico">técnico</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="vazio" id="vazio">
+    Nenhum documento encontrado.<br>
+    <span style="font-size:13px">Tente outra palavra, ou fale comigo no WhatsApp.</span>
+  </div>
+
+  <!-- ============ AJUDA RÁPIDA ============ -->
+  <h2 class="secao">Não está funcionando? Comece por aqui</h2>
+  <div class="ajuda">
+    <h3>Os 4 checks que resolvem quase tudo</h3>
+    <ol>
+      <li><strong>O microfone está conectado no controle?</strong> É a causa número 1. Sem ele, o DJI Fly nem deixa iniciar — e não avisa o motivo.</li>
+      <li><strong>O controle está no mesmo Wi-Fi que o computador?</strong> Lembre: quem envia o vídeo é o controle, não o drone.</li>
+      <li><strong>Rode <code>djio doctor</code></strong> — ele confere dependências, rede, portas e disco, e aponta o problema.</li>
+      <li><strong>Rode <code>djio monitor</code> e tente transmitir.</strong> Se não aparecer nada, o problema é o roteador isolando os aparelhos.</li>
+    </ol>
+  </div>
+
+  <!-- ============ CONTATO ============ -->
+  <h2 class="secao">Ainda precisa de ajuda?</h2>
+  <div class="contato-caixa">
+    <h3>Fale direto comigo</h3>
+    <p>Sou eu quem desenvolve e uso o sistema em campo. Se travou, me chama.</p>
+    <div class="botoes-contato">
+      <a class="btn-contato zap" href="https://wa.me/5562920016146" target="_blank" rel="noopener">
+        WhatsApp (62) 92001-6146
+      </a>
+      <a class="btn-contato site" href="https://dlmidia.com.br" target="_blank" rel="noopener">
+        dlmidia.com.br
+      </a>
+      <a class="btn-contato" href="mailto:contato@dlmidia.com.br">
+        contato@dlmidia.com.br
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    <strong>DLCast</strong> · por Daniel Júnior · <a href="https://dlmidia.com.br" target="_blank" rel="noopener">DL Mídia</a><br>
+    Marketing · Soluções Web · Mapeamento · Filmagem · Captação<br>
+    Projeto gratuito. O vídeo nunca sai da sua rede, a menos que você mande.
+  </footer>
+</div>
+
+<script>
+/******************************************************************************
+ * Busca local na lista de documentos.
+ *
+ * Cada item carrega em data-busca as palavras pelas quais faz sentido
+ * procurá-lo, inclusive sinônimos que a pessoa usaria no lugar do termo
+ * técnico ("não funciona" encontra o guia de problemas).
+ ******************************************************************************/
+function filtrar() {
+  const termo = document.getElementById('busca').value
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, ''); // ignora acentos
+
+  const docs = document.querySelectorAll('#lista-docs .doc');
+  let visiveis = 0;
+
+  docs.forEach(doc => {
+    const alvo = (
+      doc.dataset.busca + ' ' +
+      doc.querySelector('.titulo').textContent + ' ' +
+      doc.querySelector('.desc').textContent
+    ).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+    const combina = !termo || alvo.includes(termo);
+    doc.style.display = combina ? 'flex' : 'none';
+    if (combina) visiveis++;
+  });
+
+  document.getElementById('vazio').style.display = visiveis ? 'none' : 'block';
+}
+</script>
+</body>
+</html>

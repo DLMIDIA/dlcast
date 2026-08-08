@@ -335,6 +335,158 @@ Construído sobre software livre, sem dependências de Node, Docker ou banco de 
 
 ---
 
+## Perguntas frequentes
+
+<details>
+<summary><b>Preciso de internet para usar?</b></summary>
+
+<br>
+
+Não. O DLCast funciona **inteiramente na rede local**. Você pode estar numa fazenda sem sinal de celular: leve um roteador portátil, conecte o computador e o controle nele, e tudo funciona — vídeo ao vivo e gravação.
+
+A internet só é necessária se você quiser **retransmitir** para YouTube, Facebook ou Twitch.
+
+</details>
+
+<details>
+<summary><b>Funciona com o meu drone?</b></summary>
+
+<br>
+
+Se o aplicativo dele tiver a opção **"RTMP personalizado"**, funciona. Isso inclui praticamente todos os DJI recentes: Air 3, Air 3S, Mini 3, Mini 4 Pro, Mavic 3, Avata 2, Neo.
+
+O que muda é a resolução máxima, que depende do controle — não do DLCast.
+
+</details>
+
+<details>
+<summary><b>Por que 720p e não 1080p ou 4K?</b></summary>
+
+<br>
+
+É limitação física do **controle**, não do servidor. O DJI RC 2 não tem processador suficiente para codificar 1080p ao vivo enquanto pilota o drone.
+
+Com o controle DJI RC Pro, que tem processador melhor, dá para chegar a 1080p. O DLCast recebe o que o controle mandar — inclusive 4K, se algum equipamento enviar.
+
+</details>
+
+<details>
+<summary><b>Quanto de espaço a gravação ocupa?</b></summary>
+
+<br>
+
+Cerca de **30 MB por minuto** em 720p, ou **1,8 GB por hora**.
+
+O painel mostra a estimativa em tempo real, calculada com a taxa que está entrando de verdade. E na hora de gravar, você escolhe a pasta — dá para mandar direto para um HD externo.
+
+</details>
+
+<details>
+<summary><b>Meu vídeo vai para algum servidor na internet?</b></summary>
+
+<br>
+
+**Não.** O DLCast roda no seu computador e o vídeo nunca sai da sua rede, a menos que você mande explicitamente para uma plataforma usando o comando de retransmissão.
+
+Não há nuvem, não há cadastro, não há telemetria. Nada é enviado para lugar nenhum.
+
+</details>
+
+<details>
+<summary><b>Posso transmitir para o YouTube e gravar ao mesmo tempo?</b></summary>
+
+<br>
+
+Sim, e é justamente uma das vantagens. A gravação guarda o vídeo **original**, sem a recompressão que a plataforma aplica. Se a live cair, o material fica salvo.
+
+Dá inclusive para transmitir para várias plataformas simultaneamente, abrindo um comando de retransmissão para cada uma.
+
+</details>
+
+<details>
+<summary><b>É seguro? Alguém pode invadir?</b></summary>
+
+<br>
+
+Por padrão o servidor aceita conexões **apenas da sua rede local**, sem senha — igual a uma impressora Wi-Fi de casa.
+
+Ele **não deve ser exposto à internet** como está. Se você abrir a porta 1935 no roteador, qualquer pessoa poderá transmitir pelo seu servidor. Para esse caso existe configuração de senha, documentada no [Documento Mestre](docs/00-DOCUMENTO-MESTRE.md#12-segurança).
+
+</details>
+
+<details>
+<summary><b>Preciso saber programar?</b></summary>
+
+<br>
+
+Não. Você clica duas vezes num arquivo e o painel abre no navegador.
+
+Os comandos de terminal existem para quem quiser, mas são opcionais — tudo o que importa está no painel.
+
+</details>
+
+<details>
+<summary><b>Posso usar comercialmente?</b></summary>
+
+<br>
+
+Pode. A licença MIT permite uso comercial, modificação e redistribuição, sem pagar nada e sem pedir autorização. Só é preciso manter o aviso de copyright.
+
+</details>
+
+<details>
+<summary><b>Como atualizo para uma versão nova?</b></summary>
+
+<br>
+
+Baixe o pacote novo e substitua a pasta. Suas gravações ficam em `recordings/`, então copie essa pasta antes se tiver material lá dentro.
+
+</details>
+
+---
+
+## Glossário
+
+Termos que aparecem na documentação, explicados sem jargão:
+
+| Termo | O que significa |
+|---|---|
+| **RTMP** | O "idioma" que o drone usa para enviar vídeo. Todas as plataformas aceitam. |
+| **WebRTC** | Tecnologia do Google Meet e WhatsApp. Entrega vídeo com menos de 1 segundo de atraso. |
+| **HLS** | Formato da Apple. Mais lento (2 a 5s), mas funciona em qualquer aparelho. |
+| **RTSP** | Padrão de câmeras de segurança. É o que o OBS e o vMix entendem. |
+| **SRT** | Formato que aguenta internet ruim, recuperando pacotes perdidos. |
+| **Stream** | A transmissão em si — o fluxo de vídeo ao vivo. |
+| **Chave / Stream Key** | Senha que identifica seu canal no YouTube. **Aqui não é necessária.** |
+| **Bitrate / Taxa de bits** | Quantos dados por segundo o vídeo consome. Mais alto = melhor imagem. |
+| **Latência / Atraso** | Tempo entre a câmera capturar e você ver na tela. |
+| **Ingest** | A entrada do vídeo no servidor. |
+
+---
+
+## Suporte
+
+<div align="center">
+
+**Ficou com dúvida? Fale direto comigo.**
+
+[![WhatsApp](https://img.shields.io/badge/WhatsApp-(62)%2092001--6146-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/5562920016146)
+[![Site](https://img.shields.io/badge/Site-dlmidia.com.br-58a6ff?style=for-the-badge&logo=googlechrome&logoColor=white)](https://dlmidia.com.br)
+[![E-mail](https://img.shields.io/badge/E--mail-contato@dlmidia.com.br-d29922?style=for-the-badge&logo=gmail&logoColor=white)](mailto:contato@dlmidia.com.br)
+
+</div>
+
+**Antes de chamar**, vale conferir — resolve na maioria dos casos:
+
+1. O **microfone** está conectado no controle? (causa nº 1)
+2. O controle está no **mesmo Wi-Fi** que o computador?
+3. Rode `./mac/djio doctor` — ele aponta o problema sozinho
+4. Consulte a [Solução de Problemas](docs/06-TROUBLESHOOTING.md)
+
+Encontrou um erro no projeto? Abra uma [issue aqui no GitHub](../../issues) — assim a correção ajuda todo mundo.
+
+---
+
 ## Licença
 
 [MIT](LICENSE) — use, copie, modifique e distribua à vontade, inclusive comercialmente.
@@ -343,9 +495,16 @@ Construído sobre software livre, sem dependências de Node, Docker ou banco de 
 
 <div align="center">
 
-**DLCast** — desenvolvido por **Daniel Júnior** · [DL Mídia](mailto:contato@dlmidia.com.br)
+### DL Mídia
 
-Agência de marketing, soluções web, mapeamento, filmagem e captação.
+**Marketing · Soluções Web · Mapeamento · Filmagem · Captação**
+
+Desenvolvido por **Daniel Júnior**, que opera drone e câmera no dia a dia —
+este projeto nasceu de uma necessidade real de trabalho, não de uma ideia de laboratório.
+
+[**dlmidia.com.br**](https://dlmidia.com.br) · [WhatsApp (62) 92001-6146](https://wa.me/5562920016146) · [contato@dlmidia.com.br](mailto:contato@dlmidia.com.br)
+
+<br>
 
 *Projeto gratuito. O vídeo nunca sai da sua rede, a menos que você mande.*
 

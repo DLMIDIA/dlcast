@@ -685,10 +685,21 @@ cmd_rede() {
   echo
   echo "  ${NEG}4.${FIM} Em ${NEG}\"Para computadores usando:\"${FIM} marque ${NEG}Wi-Fi${FIM}"
   echo
+  # Sugere nome e senha prontos. Em campo, sob sol e com o drone esperando,
+  # inventar senha na hora e um atrito bobo - e senha fraca demais o macOS
+  # recusa. A senha abaixo e facil de digitar no controle (so numeros e
+  # letras minusculas, sem simbolo que exija trocar de teclado).
+  local senha_sugerida="drone${RANDOM}voo"
+  senha_sugerida="$(echo "$senha_sugerida" | cut -c1-12)"
+
   echo "  ${NEG}5.${FIM} Clique em ${NEG}\"Opcoes de Wi-Fi...\"${FIM} e defina:"
-  echo "       Nome da rede : ${VERDE}DLCast${FIM}"
-  echo "       Seguranca    : WPA2/WPA3 Personal"
-  echo "       Senha        : escolha uma com 8+ caracteres"
+  echo
+  echo "       Nome da rede : ${NEG}${VERDE}DLCast${FIM}"
+  echo "       Seguranca    : ${NEG}WPA2/WPA3 Personal${FIM}"
+  echo "       Senha        : ${NEG}${VERDE}${senha_sugerida}${FIM}   ${AZUL}<- sugestao pronta${FIM}"
+  echo
+  echo "     ${AMAR}Anote a senha${FIM} - voce vai digita-la no controle do drone."
+  echo "     Pode usar outra, desde que tenha 8 ou mais caracteres."
   echo
   echo "  ${NEG}6.${FIM} Ative a chave do ${NEG}Compartilhamento de Internet${FIM}"
   echo "     e confirme em \"Iniciar\""
@@ -700,8 +711,18 @@ cmd_rede() {
   echo
   echo "  -----------------------------------------------------------"
   echo
-  info "Depois de ativar, conecte o controle do drone na rede ${NEG}DLCast${FIM}"
-  info "e rode:  ${NEG}./mac/djio rede --verificar${FIM}"
+  echo "${NEG}  AGORA NO CONTROLE DO DRONE:${FIM}"
+  echo
+  echo "  ${NEG}1.${FIM} No DJI Fly, entre nas configuracoes de ${NEG}Wi-Fi${FIM}"
+  echo "  ${NEG}2.${FIM} A rede ${NEG}${VERDE}DLCast${FIM} vai aparecer na lista,"
+  echo "     igual apareceria a rede da sua casa"
+  echo "  ${NEG}3.${FIM} Selecione e digite a senha que voce definiu"
+  echo "  ${NEG}4.${FIM} Pronto - o controle ja enxerga este computador"
+  echo
+  echo "  -----------------------------------------------------------"
+  echo
+  info "Com o controle conectado, rode:  ${NEG}./mac/djio rede --verificar${FIM}"
+  info "Ele confirma que subiu e mostra o endereco para o DJI Fly."
   echo
   echo "  ${NEG}Alternativa 3 - cabo de rede${FIM}"
   echo "  So funciona com equipamento que tenha porta de rede. O controle"

@@ -366,6 +366,15 @@ configuração e explica o que marcar. Depois:
 ./mac/djio rede --verificar
 ```
 
+**Como funciona:** o computador cria uma rede Wi-Fi de verdade, com nome e
+senha, igual à de um roteador. No controle do drone, essa rede aparece na
+lista de Wi-Fi normalmente; o piloto seleciona, digita a senha e pronto — o
+controle passa a enxergar o computador.
+
+O assistente sugere nome (`DLCast`) e uma senha pronta, para o usuário não
+precisar inventar em campo. A senha precisa ter no mínimo 8 caracteres, por
+exigência do padrão WPA2.
+
 **As três soluções, da melhor para a mais simples:**
 
 1. **Roteador de viagem** — o mais confiável. Um roteador portátil ligado a

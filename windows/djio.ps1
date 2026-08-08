@@ -503,11 +503,22 @@ function Comando-Rede {
     Write-Host " Em 'Compartilhar minha conexao da Internet de', escolha"
     Write-Host "     qualquer opcao da lista - mesmo sem internet."
     Write-Host ""
+    # Sugere senha pronta: em campo, inventar senha na hora e um atrito bobo,
+    # e senha curta demais o Windows recusa. So minusculas e numeros, para
+    # nao obrigar a trocar de teclado na tela do controle.
+    $senhaSugerida = "drone" + (Get-Random -Minimum 1000 -Maximum 9999) + "voo"
+
     Write-Host "  2." -NoNewline -ForegroundColor White
     Write-Host " Clique em 'Editar' e defina:"
+    Write-Host ""
     Write-Host "       Nome da rede : DLCast" -ForegroundColor Green
-    Write-Host "       Senha        : escolha uma com 8+ caracteres"
+    Write-Host "       Senha        : $senhaSugerida" -NoNewline -ForegroundColor Green
+    Write-Host "   <- sugestao pronta" -ForegroundColor Cyan
     Write-Host "       Banda        : 2,4 GHz  (alcance maior em campo)"
+    Write-Host ""
+    Write-Host "     Anote a senha" -NoNewline -ForegroundColor Yellow
+    Write-Host " - voce vai digita-la no controle do drone."
+    Write-Host "     Pode usar outra, desde que tenha 8 ou mais caracteres."
     Write-Host ""
     Write-Host "  3." -NoNewline -ForegroundColor White
     Write-Host " Ative a chave do 'Ponto de acesso movel'"
@@ -523,7 +534,21 @@ function Comando-Rede {
     Write-Host ""
     Write-Host "  -----------------------------------------------------------"
     Write-Host ""
-    Escrever-Info "Depois de ativar, conecte o controle na rede DLCast e rode:"
+    Write-Host "  AGORA NO CONTROLE DO DRONE:" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  1." -NoNewline -ForegroundColor White
+    Write-Host " No DJI Fly, entre nas configuracoes de Wi-Fi"
+    Write-Host "  2." -NoNewline -ForegroundColor White
+    Write-Host " A rede DLCast vai aparecer na lista, igual apareceria"
+    Write-Host "     a rede da sua casa"
+    Write-Host "  3." -NoNewline -ForegroundColor White
+    Write-Host " Selecione e digite a senha que voce definiu"
+    Write-Host "  4." -NoNewline -ForegroundColor White
+    Write-Host " Pronto - o controle ja enxerga este computador"
+    Write-Host ""
+    Write-Host "  -----------------------------------------------------------"
+    Write-Host ""
+    Escrever-Info "Com o controle conectado, rode:"
     Write-Host "      .\windows\djio.ps1 rede --verificar"
     Write-Host ""
     Write-Host "  Alternativa 3 - cabo de rede" -ForegroundColor White

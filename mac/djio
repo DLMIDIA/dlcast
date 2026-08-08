@@ -474,6 +474,11 @@ cmd_painel() {
   # opcoes reais de onde salvar as gravacoes.
   gerar_ambiente
 
+  # O servidor do painel so enxerga src/web/, entao o arquivo de contexto
+  # para IA precisa de uma copia la dentro para o botao "copiar" funcionar.
+  # O original fica na raiz, onde o usuario encontra com facilidade.
+  cp -f SUPORTE-IA.md src/web/SUPORTE-IA.md 2>/dev/null
+
   # Reaproveita o servidor do painel se ele ja estiver no ar.
   if lsof -nP -iTCP:${PAINEL_PORT} -sTCP:LISTEN >/dev/null 2>&1; then
     info "Painel ja estava no ar."

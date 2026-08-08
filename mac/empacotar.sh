@@ -65,8 +65,18 @@ montar_pacote() {
   mkdir -p "$temp"
 
   # --- Arquivos comuns aos dois sistemas ------------------------------------
-  cp COMECE-AQUI.html README.md LICENSE "$temp/" 2>/dev/null
+  # SUPORTE-IA.md e o arquivo que o usuario cola numa IA para resolver
+  # problemas sozinho - vai nos dois pacotes.
+  cp COMECE-AQUI.html README.md LICENSE SUPORTE-IA.md "$temp/" 2>/dev/null
   cp -R config src docs "$temp/" 2>/dev/null
+
+  # A pagina "Resolver com IA" busca o arquivo dentro de src/web para o
+  # botao de copiar funcionar; sem esta copia, o botao cai no plano B.
+  cp SUPORTE-IA.md "$temp/src/web/SUPORTE-IA.md" 2>/dev/null
+
+  # Documentacao interna de desenvolvimento nao vai para o usuario final.
+  rm -f "$temp/docs/07-ESTRATEGIA-MULTIPLATAFORMA.md" \
+        "$temp/docs/08-PUBLICAR-NO-GITHUB.md" 2>/dev/null
 
   # --- A pasta do sistema em questao ----------------------------------------
   cp -R "$pasta_sistema" "$temp/" 2>/dev/null

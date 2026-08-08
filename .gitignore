@@ -39,3 +39,14 @@ auto.crt
 # --- Sistema ----------------------------------------------------------------
 .DS_Store
 Thumbs.db
+
+# --- Documentacao interna de desenvolvimento --------------------------------
+# Estes arquivos sao do NOSSO processo de trabalho, nao do produto.
+# Continuam na pasta local, mas nao vao para o repositorio publico:
+#   CLAUDE.md  = regras de trabalho e mapa tecnico para o assistente
+#   docs/07    = plano interno de evolucao para aplicativo
+#   docs/08    = guia de como VOCE publica no GitHub
+CLAUDE.md
+docs/07-ESTRATEGIA-MULTIPLATAFORMA.md
+docs/08-PUBLICAR-NO-GITHUB.md
+src/web/SUPORTE-IA.md

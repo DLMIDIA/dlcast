@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast — Resolver com Inteligência Artificial</title>
+<style>
+  :root {
+    --fundo:#0d1117; --cartao:#161b22; --fundo2:#0b0f14; --borda:#30363d;
+    --texto:#e6edf3; --suave:#8b949e; --verde:#3fb950; --vermelho:#f85149;
+    --amarelo:#d29922; --azul:#58a6ff; --roxo:#bc8cff;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--fundo); color:var(--texto); line-height:1.7;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    padding:26px 16px 70px;
+  }
+  .container { max-width:900px; margin:0 auto; }
+
+  nav { display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+        margin-bottom:30px; padding-bottom:18px; border-bottom:1px solid var(--borda); }
+  nav a { color:var(--suave); text-decoration:none; font-size:13.5px; font-weight:600;
+          padding:8px 15px; border-radius:8px; border:1px solid transparent; }
+  nav a:hover { color:var(--texto); background:var(--cartao); }
+  nav a.ativo { color:var(--azul); border-color:var(--borda); background:var(--cartao); }
+
+  .topo { text-align:center; margin-bottom:32px; }
+  .topo .ic { font-size:46px; margin-bottom:10px; }
+  .topo h1 { font-size:28px; letter-spacing:-0.5px; margin-bottom:10px; }
+  .topo p { color:var(--suave); font-size:16px; max-width:600px; margin:0 auto; }
+
+  .destaque {
+    background:linear-gradient(135deg, rgba(188,140,255,.13), rgba(88,166,255,.08));
+    border:1px solid rgba(188,140,255,.3);
+    border-radius:16px; padding:28px; margin-bottom:30px; text-align:center;
+  }
+  .destaque h2 { font-size:20px; margin-bottom:10px; }
+  .destaque p { font-size:15px; color:var(--suave); margin-bottom:20px; }
+
+  .btn-grande {
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--roxo); color:#04121f; border:none;
+    padding:16px 34px; border-radius:12px; cursor:pointer;
+    font-size:16.5px; font-weight:800; font-family:inherit;
+    transition:opacity .15s, transform .15s;
+  }
+  .btn-grande:hover { opacity:.88; transform:translateY(-2px); }
+  .btn-grande.pronto { background:var(--verde); }
+
+  h2.secao { font-size:12px; text-transform:uppercase; letter-spacing:1.4px;
+             color:var(--azul); font-weight:800; margin:34px 0 14px; }
+
+  /* ---------- Passos ---------- */
+  .passos { display:grid; gap:14px; }
+  .passo {
+    background:var(--cartao); border:1px solid var(--borda);
+    border-radius:13px; padding:22px; display:flex; gap:18px; align-items:flex-start;
+  }
+  .passo .num {
+    width:36px; height:36px; border-radius:50%; background:var(--roxo); color:#04121f;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:16px; flex-shrink:0;
+  }
+  .passo .conteudo { flex:1; min-width:0; }
+  .passo h3 { font-size:17px; margin-bottom:6px; }
+  .passo p { font-size:14.5px; color:var(--suave); }
+  .passo p strong { color:var(--texto); }
+
+  /* ---------- IAs ---------- */
+  .ias { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px; }
+  .ia {
+    background:var(--fundo2); border:1px solid var(--borda); border-radius:11px;
+    padding:16px; text-align:center; text-decoration:none; color:var(--texto);
+    transition:border-color .15s, transform .15s;
+  }
+  .ia:hover { border-color:var(--roxo); transform:translateY(-2px); }
+  .ia .nome { font-size:15px; font-weight:700; }
+  .ia .obs { font-size:11.5px; color:var(--suave); margin-top:2px; }
+
+  /* ---------- Exemplo ---------- */
+  .exemplo {
+    background:var(--fundo2); border:1px solid var(--borda);
+    border-left:3px solid var(--verde); border-radius:9px;
+    padding:16px 18px; font-size:14.5px; margin-top:12px;
+  }
+  .exemplo .rotulo {
+    font-size:10.5px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--verde); font-weight:800; margin-bottom:7px;
+  }
+  .exemplo em { color:var(--texto); font-style:italic; }
+
+  .aviso {
+    background:rgba(210,153,34,.12); border-left:3px solid var(--amarelo);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:16px; color:#e3c07b;
+  }
+  .nota {
+    background:rgba(88,166,255,.1); border-left:3px solid var(--azul);
+    border-radius:7px; padding:14px 16px; font-size:13.5px; margin-top:16px; color:#a9d1ff;
+  }
+
+  .cartao { background:var(--cartao); border:1px solid var(--borda); border-radius:13px; padding:24px; }
+
+  ul.lista { list-style:none; }
+  ul.lista li { position:relative; padding-left:26px; margin-bottom:10px; font-size:14.5px; }
+  ul.lista li::before { content:'✓'; position:absolute; left:0; color:var(--verde); font-weight:800; }
+
+  code {
+    background:var(--fundo2); padding:2px 7px; border-radius:5px;
+    font-family:ui-monospace,Menlo,monospace; font-size:13px; color:var(--verde);
+  }
+
+  footer { text-align:center; color:var(--suave); font-size:12.5px;
+           margin-top:42px; padding-top:22px; border-top:1px solid var(--borda); line-height:2; }
+  footer a { color:var(--azul); text-decoration:none; }
+
+  .toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(90px);
+    background:var(--verde); color:#04121f; padding:13px 28px; border-radius:10px;
+    font-weight:700; z-index:200; transition:transform .28s; font-size:15px;
+  }
+  .toast.visivel { transform:translateX(-50%) translateY(0); }
+  .toast.erro { background:var(--vermelho); color:#fff; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav>
+    <a href="index.html">Comece por aqui</a>
+    <a href="painel.html">Painel</a>
+    <a href="documentacao.html">Documentação</a>
+    <a href="suporte-ia.html" class="ativo">Resolver com IA</a>
+    <a href="sobre.html">Sobre</a>
+  </nav>
+
+  <div class="topo">
+    <div class="ic">🤖</div>
+    <h1>Resolva sozinho com Inteligência Artificial</h1>
+    <p>
+      Preparamos um arquivo que ensina qualquer IA a entender o DLCast por
+      completo. Cole nele o seu problema e receba a solução na hora — sem
+      esperar ninguém responder.
+    </p>
+  </div>
+
+  <!-- ============ BOTÃO PRINCIPAL ============ -->
+  <div class="destaque">
+    <h2>Copie o arquivo de diagnóstico</h2>
+    <p>Um clique copia todo o conteúdo. Depois é só colar na IA que você usa.</p>
+    <button class="btn-grande" id="btn-copiar" onclick="copiarArquivo()">
+      Copiar arquivo de diagnóstico
+    </button>
+    <div style="margin-top:14px; font-size:13px; color:var(--suave)" id="status-arquivo">
+      carregando…
+    </div>
+  </div>
+
+  <!-- ============ COMO USAR ============ -->
+  <h2 class="secao">Como usar, em 3 passos</h2>
+  <div class="passos">
+
+    <div class="passo">
+      <div class="num">1</div>
+      <div class="conteudo">
+        <h3>Copie o arquivo</h3>
+        <p>
+          Use o botão acima. Se preferir, abra o arquivo
+          <code>SUPORTE-IA.md</code> na pasta do DLCast, selecione tudo
+          (<strong>Ctrl+A</strong> ou <strong>Cmd+A</strong>) e copie.
+        </p>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">2</div>
+      <div class="conteudo">
+        <h3>Cole na sua IA preferida</h3>
+        <p>
+          Funciona em qualquer uma. Abra a que você já usa e cole o texto
+          numa conversa nova.
+        </p>
+        <div class="ias">
+          <a class="ia" href="https://chat.openai.com" target="_blank" rel="noopener">
+            <div class="nome">ChatGPT</div>
+            <div class="obs">OpenAI</div>
+          </a>
+          <a class="ia" href="https://gemini.google.com" target="_blank" rel="noopener">
+            <div class="nome">Gemini</div>
+            <div class="obs">Google</div>
+          </a>
+          <a class="ia" href="https://claude.ai" target="_blank" rel="noopener">
+            <div class="nome">Claude</div>
+            <div class="obs">Anthropic</div>
+          </a>
+          <a class="ia" href="https://copilot.microsoft.com" target="_blank" rel="noopener">
+            <div class="nome">Copilot</div>
+            <div class="obs">Microsoft</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">3</div>
+      <div class="conteudo">
+        <h3>Escreva o seu problema logo abaixo</h3>
+        <p>
+          Depois de colar, descreva o que está acontecendo. Quanto mais
+          detalhes, melhor a resposta.
+        </p>
+        <div class="exemplo">
+          <div class="rotulo">Exemplo do que escrever</div>
+          <em>
+            "Meu drone não conecta. O servidor está ligado e o painel abre
+            normal, mas quando aperto iniciar transmissão no DJI Fly dá erro
+            de conexão. Estou no Windows 11, drone é um Air 3 com controle
+            RC 2."
+          </em>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ O QUE A IA VAI SABER ============ -->
+  <h2 class="secao">O que a IA vai saber sobre o sistema</h2>
+  <div class="cartao">
+    <ul class="lista">
+      <li>Como o sistema funciona por dentro e quais tecnologias usa</li>
+      <li>A estrutura completa de pastas e o que cada arquivo faz</li>
+      <li>Todas as portas de rede e para que serve cada uma</li>
+      <li>Todos os comandos disponíveis, no Mac e no Windows</li>
+      <li>Os 11 problemas conhecidos, em ordem de frequência real, com solução</li>
+      <li>As limitações de hardware que não são defeitos (720p, microfone obrigatório)</li>
+      <li>Como ler o log do servidor e o que cada mensagem significa</li>
+      <li>Quais comandos rodar para coletar informações de diagnóstico</li>
+    </ul>
+
+    <div class="nota">
+      <strong>Por que isso funciona tão bem:</strong> o arquivo traz instruções
+      diretas para a IA — dizendo para começar pelas causas mais frequentes,
+      explicar sem jargão e não inventar recursos que não existem. Ela vai se
+      comportar como um suporte técnico que conhece o sistema de verdade.
+    </div>
+  </div>
+
+  <!-- ============ PRIVACIDADE ============ -->
+  <h2 class="secao">Privacidade</h2>
+  <div class="cartao">
+    <p style="font-size:14.5px; margin-bottom:12px">
+      O arquivo contém apenas <strong>documentação técnica do sistema</strong>.
+      Não tem nada seu: nenhum vídeo, nenhuma gravação, nenhuma senha, nenhum
+      dado pessoal.
+    </p>
+    <div class="aviso">
+      <strong>Um cuidado ao colar o log:</strong> se você for colar o conteúdo
+      de <code>logs/mediamtx.log</code> junto, saiba que ele mostra os
+      <strong>endereços IP</strong> dos aparelhos da sua rede. São endereços
+      internos (do tipo 192.168.x.x), que não identificam você nem servem para
+      acessar sua rede de fora — mas se preferir, apague essas linhas antes.
+    </div>
+  </div>
+
+  <!-- ============ SE NÃO RESOLVER ============ -->
+  <h2 class="secao">Se a IA não resolver</h2>
+  <div class="cartao" style="text-align:center">
+    <p style="font-size:15px; margin-bottom:18px">
+      Sem problema — me chame. Sou eu quem desenvolve e uso o sistema em campo.
+    </p>
+    <div style="display:flex; gap:11px; flex-wrap:wrap; justify-content:center">
+      <a href="https://wa.me/5562920016146" target="_blank" rel="noopener"
+         style="display:inline-block;background:#25D366;color:#04121f;padding:13px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:15px">
+        WhatsApp (62) 92001-6146
+      </a>
+      <a href="https://dlmidia.com.br" target="_blank" rel="noopener"
+         style="display:inline-block;background:var(--azul);color:#04121f;padding:13px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:15px">
+        dlmidia.com.br
+      </a>
+    </div>
+    <p style="font-size:13px; color:var(--suave); margin-top:16px">
+      Mande junto a saída do comando <code>doctor</code> e as últimas linhas do
+      log — assim eu respondo direto com a solução.
+    </p>
+  </div>
+
+  <footer>
+    <strong>DLCast</strong> · por Daniel Júnior ·
+    <a href="https://dlmidia.com.br" target="_blank" rel="noopener">DL Mídia</a><br>
+    Marketing · Soluções Web · Mapeamento · Filmagem · Captação<br>
+    Projeto gratuito. O vídeo nunca sai da sua rede, a menos que você mande.
+  </footer>
+</div>
+
+<div class="toast" id="toast">Copiado!</div>
+
+<script>
+/******************************************************************************
+ * Carrega o arquivo de contexto e permite copiá-lo com um clique.
+ *
+ * O arquivo é buscado da própria pasta servida, para que o botão funcione
+ * sem depender de nada externo.
+ ******************************************************************************/
+let conteudoArquivo = null;
+
+async function carregarArquivo() {
+  const status = document.getElementById('status-arquivo');
+  try {
+    const r = await fetch('SUPORTE-IA.md', { cache: 'no-store' });
+    if (!r.ok) throw new Error('não encontrado');
+    conteudoArquivo = await r.text();
+
+    const kb = Math.round(conteudoArquivo.length / 1024);
+    const palavras = conteudoArquivo.split(/\s+/).length;
+    status.textContent = `arquivo pronto · ${kb} KB · cerca de ${palavras.toLocaleString('pt-BR')} palavras`;
+  } catch {
+    status.innerHTML = 'Abra o arquivo <strong>SUPORTE-IA.md</strong> na pasta do DLCast e copie o conteúdo manualmente.';
+    document.getElementById('btn-copiar').textContent = 'Abrir instruções';
+  }
+}
+
+function mostrarAviso(texto, erro = false) {
+  const t = document.getElementById('toast');
+  t.textContent = texto;
+  t.className = 'toast visivel' + (erro ? ' erro' : '');
+  setTimeout(() => { t.className = 'toast' + (erro ? ' erro' : ''); }, 2800);
+}
+
+async function copiarArquivo() {
+  const btn = document.getElementById('btn-copiar');
+
+  if (!conteudoArquivo) {
+    mostrarAviso('Abra o arquivo SUPORTE-IA.md na pasta do DLCast', true);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(conteudoArquivo);
+    btn.textContent = 'Copiado! Agora cole na sua IA';
+    btn.classList.add('pronto');
+    mostrarAviso('Arquivo copiado — cole na sua IA e escreva o problema');
+    setTimeout(() => {
+      btn.textContent = 'Copiar arquivo de diagnóstico';
+      btn.classList.remove('pronto');
+    }, 4000);
+  } catch {
+    mostrarAviso('Seu navegador bloqueou a cópia. Abra o arquivo SUPORTE-IA.md', true);
+  }
+}
+
+carregarArquivo();
+</script>
+</body>
+</html>

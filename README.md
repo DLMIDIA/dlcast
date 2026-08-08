@@ -293,8 +293,7 @@ No Windows, o equivalente é `.\windows\djio.ps1 <comando>`.
 | [**Documento Mestre**](docs/00-DOCUMENTO-MESTRE.md) | Tudo, em detalhe |
 | [**Visão e Decisões**](docs/09-VISAO-E-DECISOES.md) | Por que o projeto existe e por que cada escolha foi feita |
 | [**Solução de Problemas**](docs/06-TROUBLESHOOTING.md) | Quando algo não funciona |
-| [**Estratégia Multiplataforma**](docs/07-ESTRATEGIA-MULTIPLATAFORMA.md) | Plano para virar aplicativo |
-| [**Publicar no GitHub**](docs/08-PUBLICAR-NO-GITHUB.md) | Como distribuir o projeto |
+| [**Resolver com IA**](SUPORTE-IA.md) | Arquivo para colar no ChatGPT/Gemini e resolver sozinho |
 
 ---
 

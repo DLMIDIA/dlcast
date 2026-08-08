@@ -217,6 +217,18 @@ e um usuário comum não tem como adivinhar isso. Comandos PowerShell de linha
 única chamados de dentro do .bat não são bloqueados — é assim que ele
 descobre o IP.
 
+**No `.gitignore`, comentário só em linha própria.**
+Motivo: o Git NÃO aceita comentário no fim da linha. Escrever
+`logs/   # registros` faz o padrão virar o texto inteiro, que não casa com
+nada — e os arquivos sobem assim mesmo. Isso já aconteceu aqui: os logs e o
+`ambiente.json` (que tem os caminhos pessoais do usuário) entraram no primeiro
+`git add` por causa disso. Confira sempre com `git status` antes de publicar.
+
+**Arquivo já rastreado ignora o `.gitignore`.**
+Motivo: as regras só valem para arquivos ainda não rastreados. Se algo entrou
+no índice por engano, corrigir o `.gitignore` não basta — é preciso
+`git reset` e adicionar de novo.
+
 **Permissões `api` e `metrics` no usuário anônimo.**
 Motivo: sem elas o MediaMTX responde "authentication error" e tanto o painel
 quanto o `djio status` param de funcionar. Já quebrou uma vez durante o

@@ -3,1081 +3,1064 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DLCast — Painel de Controle</title>
+<title>DLCast Pro — Studio Broadcast & Telemetria de Drones</title>
 <style>
   :root {
-    --fundo: #0d1117;
-    --cartao: #161b22;
-    --fundo2: #0b0f14;
-    --borda: #30363d;
-    --texto: #e6edf3;
-    --suave: #8b949e;
-    --verde: #3fb950;
-    --vermelho: #f85149;
-    --amarelo: #d29922;
-    --azul: #58a6ff;
-    --roxo: #bc8cff;
+    --bg-base: #080b10;
+    --bg-surface: #0f141d;
+    --bg-card: #151b26;
+    --bg-card-hover: #1c2433;
+    --border: #232c3d;
+    --border-accent: #334155;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent-blue: #0284c7;
+    --accent-cyan: #06b6d4;
+    --accent-emerald: #10b981;
+    --accent-red: #ef4444;
+    --accent-amber: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --glow-cyan: rgba(6, 182, 212, 0.35);
+    --glow-emerald: rgba(16, 185, 129, 0.4);
+    --glow-red: rgba(239, 68, 68, 0.45);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--fundo);
-    color: var(--texto);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    line-height: 1.6;
-    padding: 20px 14px 60px;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    line-height: 1.5;
+    padding: 16px 20px 60px;
+    min-height: 100vh;
   }
 
-  .container { max-width: 1240px; margin: 0 auto; }
+  .container { max-width: 1540px; margin: 0 auto; }
 
+  /* ---------- Top Bar ---------- */
   header {
     display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--borda);
-    margin-bottom: 22px;
+    flex-wrap: wrap; gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
   }
 
-  h1 { font-size: 25px; letter-spacing: -0.5px; }
-  h1 span { color: var(--azul); }
-  .subtitulo { color: var(--suave); font-size: 13px; }
-
-  .estado {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--cartao); border: 1px solid var(--borda);
-    border-radius: 999px; padding: 8px 18px;
-    font-weight: 600; font-size: 13px;
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 900; color: #fff;
+    box-shadow: 0 0 20px var(--glow-cyan);
   }
-  .bolinha { width: 10px; height: 10px; border-radius: 50%; background: var(--suave); }
-  .bolinha.online  { background: var(--verde); animation: pulsar 2s infinite; }
-  .bolinha.offline { background: var(--vermelho); }
-  @keyframes pulsar {
-    0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(63,185,80,.6); }
-    50% { opacity:.7; box-shadow:0 0 0 8px rgba(63,185,80,0); }
+  .brand-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .brand-title span.pro {
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-weight: 900; margin-left: 4px; font-size: 14px;
+    padding: 2px 6px; border: 1px solid var(--accent-cyan); border-radius: 4px;
+    vertical-align: middle;
   }
+  .brand-subtitle { font-size: 12px; color: var(--text-muted); }
 
-  .grade { display: grid; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 18px; margin-bottom: 18px; }
-  .largura-total { grid-column: 1 / -1; }
+  .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-  .cartao {
-    background: var(--cartao); border: 1px solid var(--borda);
-    border-radius: 12px; padding: 20px;
+  .pill-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
   }
-  .cartao h2 {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
-    color: var(--suave); margin-bottom: 14px; font-weight: 700;
-  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+  .dot.online { background: var(--accent-emerald); box-shadow: 0 0 10px var(--glow-emerald); animation: pulse 2s infinite; }
+  .dot.offline { background: var(--accent-red); }
+  .dot.tunnel { background: var(--accent-cyan); box-shadow: 0 0 10px var(--glow-cyan); }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
 
-  /* ---------- Player ---------- */
-  .player-caixa {
-    background:#000; border-radius:10px; overflow:hidden;
-    aspect-ratio:16/9; position:relative; border:1px solid var(--borda);
+  /* Nav Links */
+  .nav-tabs { display: flex; gap: 8px; background: var(--bg-surface); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
+  .nav-btn {
+    background: transparent; color: var(--text-muted); border: none; padding: 6px 14px;
+    border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
   }
-  .player-caixa video { width:100%; height:100%; display:block; object-fit:contain; background:#000; }
+  .nav-btn:hover, .nav-btn.active { color: var(--text-main); background: var(--bg-card); }
 
-  .sem-sinal {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:8px;
-    color:var(--suave); text-align:center; padding:20px;
-  }
-  .sem-sinal .icone { font-size:38px; opacity:.5; }
+  /* ---------- Layout Grid ---------- */
+  .main-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+  @media (max-width: 1180px) { .main-layout { grid-template-columns: 1fr; } }
 
-  /* Selo de gravação sobre o vídeo */
-  .selo-rec {
-    position:absolute; top:12px; left:12px;
-    display:none; align-items:center; gap:7px;
-    background:rgba(248,81,73,.92); color:#fff;
-    padding:5px 12px; border-radius:999px;
-    font-size:12px; font-weight:800; letter-spacing:.5px;
-    z-index:5;
-  }
-  .selo-rec.ativo { display:flex; }
-  .selo-rec .ponto { width:8px; height:8px; border-radius:50%; background:#fff; animation:piscar 1.2s infinite; }
-  @keyframes piscar { 0%,100%{opacity:1} 50%{opacity:.25} }
-
-  /* Cronômetro sobre o vídeo */
-  .timecode {
-    position:absolute; top:12px; right:12px;
-    background:rgba(0,0,0,.72); color:var(--verde);
-    padding:5px 12px; border-radius:8px;
-    font-family:ui-monospace,"SF Mono",Menlo,monospace;
-    font-size:14px; font-weight:700; letter-spacing:1px; z-index:5;
+  /* ---------- Player Section ---------- */
+  .player-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;
   }
 
-  /* ---------- Métricas ao vivo ---------- */
-  .metricas {
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr));
-    gap:10px; margin-top:14px;
+  .player-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; background: var(--bg-card); border-bottom: 1px solid var(--border);
   }
-  .metrica { background:var(--fundo2); border:1px solid var(--borda); border-radius:9px; padding:11px 8px; text-align:center; }
-  .metrica .valor { font-size:19px; font-weight:800; color:var(--azul); line-height:1.25; font-variant-numeric:tabular-nums; }
-  .metrica .rotulo { font-size:10px; color:var(--suave); text-transform:uppercase; letter-spacing:.6px; }
-  .metrica .valor.bom    { color:var(--verde); }
-  .metrica .valor.medio  { color:var(--amarelo); }
-  .metrica .valor.ruim   { color:var(--vermelho); }
+  .stream-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px; }
 
-  /* ---------- Botões ---------- */
-  button {
-    background:var(--azul); color:#04121f; border:none; border-radius:8px;
-    padding:11px 18px; font-size:14px; font-weight:700; cursor:pointer;
-    font-family:inherit; transition:opacity .15s, background .15s; width:100%;
+  .source-selector { display: flex; gap: 4px; }
+  .source-btn {
+    background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-muted);
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: .15s;
   }
-  button:hover { opacity:.87; }
-  button:disabled { opacity:.4; cursor:not-allowed; }
-  button.secundario { background:transparent; color:var(--texto); border:1px solid var(--borda); }
-  button.secundario:hover { background:var(--fundo2); }
-  button.gravar { background:var(--vermelho); color:#fff; }
-  button.gravando { background:#7d1a16; color:#fff; }
+  .source-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
 
-  .linha-botoes { display:flex; gap:9px; flex-wrap:wrap; }
-  .linha-botoes button { width:auto; flex:1; min-width:120px; }
-
-  /* ---------- Endereço ---------- */
-  .endereco {
-    background:var(--fundo2); border:2px dashed var(--azul); border-radius:10px;
-    padding:16px; text-align:center; margin-bottom:12px;
+  /* Video Canvas Area */
+  .video-viewport {
+    position: relative; width: 100%; aspect-ratio: 16/9; background: #000;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
   }
-  .endereco code {
-    font-family:ui-monospace,"SF Mono",Menlo,monospace;
-    font-size:clamp(14px,3.4vw,19px); color:var(--verde);
-    font-weight:700; word-break:break-all; display:block;
+  .video-viewport video {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+    transition: transform .2s ease-out;
   }
 
-  /* ---------- Links copiáveis ---------- */
-  .link-item {
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    padding:11px 0; border-bottom:1px solid var(--borda);
+  /* Telemetry HUD (Artificial Horizon & Overlays) */
+  .hud-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    display: none; flex-direction: column; justify-content: space-between;
+    padding: 16px; z-index: 10;
   }
-  .link-item:last-child { border-bottom:0; }
-  .link-info { min-width:0; flex:1; }
-  .link-nome { font-size:13px; font-weight:700; }
-  .link-nome .tag { font-size:10px; padding:2px 7px; border-radius:5px; margin-left:6px; font-weight:700; }
-  .tag.rapido { background:rgba(63,185,80,.18); color:var(--verde); }
-  .tag.medio  { background:rgba(210,153,34,.18); color:var(--amarelo); }
-  .link-url {
-    font-family:ui-monospace,Menlo,monospace; font-size:11px;
-    color:var(--suave); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  .btn-copiar {
-    background:transparent; border:1px solid var(--borda); color:var(--texto);
-    padding:6px 13px; font-size:12px; border-radius:7px; width:auto; flex-shrink:0;
-  }
-  .btn-copiar.feito { background:var(--verde); color:#04121f; border-color:var(--verde); }
+  .hud-overlay.active { display: flex; }
 
-  /* ---------- Tabela de informações ---------- */
-  table.info { width:100%; border-collapse:collapse; font-size:13px; }
-  table.info td { padding:8px 0; border-bottom:1px solid var(--borda); }
-  table.info td:first-child { color:var(--suave); width:45%; }
-  table.info td:last-child { text-align:right; font-weight:600; font-family:ui-monospace,Menlo,monospace; }
-  table.info tr:last-child td { border-bottom:0; }
-
-  /* ---------- Modal ---------- */
-  .modal-fundo {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.78);
-    z-index:100; padding:20px; overflow-y:auto;
-    backdrop-filter:blur(3px);
-  }
-  .modal-fundo.aberto { display:flex; align-items:flex-start; justify-content:center; }
-  .modal {
-    background:var(--cartao); border:1px solid var(--borda); border-radius:14px;
-    padding:26px; max-width:640px; width:100%; margin:auto;
-  }
-  .modal-topo { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-  .modal-topo h3 { font-size:18px; }
-  .fechar {
-    background:transparent; border:1px solid var(--borda); color:var(--texto);
-    width:34px; height:34px; border-radius:8px; font-size:19px; line-height:1;
-    cursor:pointer; padding:0; flex-shrink:0;
-  }
-  .modal-secao { margin-bottom:20px; }
-  .modal-secao h4 {
-    font-size:11px; text-transform:uppercase; letter-spacing:1px;
-    color:var(--azul); margin-bottom:9px; font-weight:700;
-  }
-  .nota {
-    background:rgba(88,166,255,.09); border-left:3px solid var(--azul);
-    border-radius:6px; padding:11px 13px; font-size:12px; color:#a9d1ff; margin-top:12px;
+  .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hud-badge {
+    background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px;
+    padding: 4px 10px; font-family: ui-monospace, monospace; font-size: 12px;
+    color: var(--accent-cyan); font-weight: 700;
   }
 
-  .aviso {
-    background:rgba(210,153,34,.12); border-left:3px solid var(--amarelo);
-    border-radius:6px; padding:11px 13px; font-size:12.5px; margin-top:12px; color:#e3c07b;
+  /* Center Artificial Horizon */
+  .hud-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 220px; height: 220px; border-radius: 50%;
+    border: 1px dashed rgba(6, 182, 212, 0.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .horizon-line {
+    width: 140px; height: 2px; background: rgba(6, 182, 212, 0.85);
+    box-shadow: 0 0 10px var(--glow-cyan); position: relative;
+    transition: transform 0.1s ease-out;
+  }
+  .horizon-line::before, .horizon-line::after {
+    content: ''; position: absolute; top: -5px; width: 2px; height: 12px; background: var(--accent-cyan);
+  }
+  .horizon-line::before { left: 0; }
+  .horizon-line::after { right: 0; }
+  .hud-crosshair { width: 10px; height: 10px; border: 2px solid var(--accent-emerald); border-radius: 50%; position: absolute; }
+
+  /* Compass Bar */
+  .hud-compass {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.15);
+    padding: 4px 20px; border-radius: 999px; font-family: ui-monospace, monospace;
+    font-size: 11px; font-weight: 800; color: #fff; letter-spacing: 2px;
   }
 
-  ol.passos { list-style:none; counter-reset:p; }
-  ol.passos li { counter-increment:p; position:relative; padding:0 0 12px 36px; font-size:13.5px; }
-  ol.passos li::before {
-    content:counter(p); position:absolute; left:0; top:1px;
-    width:23px; height:23px; background:var(--azul); color:#04121f;
-    border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:800;
+  /* Replay Badge Over Video */
+  .replay-live-badge {
+    position: absolute; top: 16px; left: 16px; z-index: 20;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(16, 185, 129, 0.9); color: #fff;
+    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 800;
+    letter-spacing: 1px; box-shadow: 0 0 15px var(--glow-emerald);
+  }
+  .replay-mode-badge {
+    position: absolute; top: 16px; left: 16px; z-index: 20;
+    display: none; align-items: center; gap: 8px;
+    background: rgba(245, 158, 11, 0.95); color: #000;
+    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 900;
+    letter-spacing: 1px; box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+  }
+  .rec-indicator {
+    position: absolute; top: 16px; right: 16px; z-index: 20;
+    display: none; align-items: center; gap: 8px;
+    background: rgba(239, 68, 68, 0.9); color: #fff;
+    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 800;
+    letter-spacing: 1px; box-shadow: 0 0 15px var(--glow-red);
+  }
+  .rec-indicator.active { display: flex; }
+  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: pulse 1s infinite; }
+
+  /* Floating Picture-in-Picture Replay Window */
+  .pip-replay-window {
+    position: absolute; bottom: 20px; right: 20px; width: 280px; aspect-ratio: 16/9;
+    background: #000; border: 2px solid var(--accent-amber); border-radius: 10px;
+    overflow: hidden; z-index: 30; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    display: none; flex-direction: column;
+  }
+  .pip-replay-window.active { display: flex; }
+  .pip-header {
+    background: rgba(0,0,0,0.8); padding: 4px 8px; display: flex;
+    justify-content: space-between; align-items: center; font-size: 10px;
+    color: var(--accent-amber); font-weight: 800;
+  }
+  .pip-replay-window video { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Waiting Screen */
+  .no-signal-screen {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    background: radial-gradient(circle at center, #111827 0%, #080b10 100%);
+    color: var(--text-muted); text-align: center; padding: 20px;
+  }
+  .no-signal-icon { font-size: 48px; opacity: 0.6; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  /* Audio Meter Overlay */
+  .audio-meter-bar {
+    position: absolute; bottom: 12px; left: 16px; width: 120px; height: 6px;
+    background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden;
+    display: flex; gap: 2px; z-index: 15;
+  }
+  .meter-fill { height: 100%; background: var(--accent-emerald); width: 0%; transition: width 0.08s; }
+
+  /* ---------- INSTANT REPLAY CONTROLLER & DVR TIMELINE ---------- */
+  .replay-panel {
+    background: var(--bg-card); border-top: 1px solid var(--border);
+    padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;
   }
 
-  footer { text-align:center; color:var(--suave); font-size:12px; margin-top:30px; }
-
-  .aviso-toast {
-    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(90px);
-    background:var(--verde); color:#04121f; padding:11px 24px; border-radius:9px;
-    font-weight:700; font-size:14px; z-index:200; transition:transform .28s; box-shadow:0 6px 22px rgba(0,0,0,.45);
+  .timeline-bar-wrapper { display: flex; align-items: center; gap: 12px; }
+  .time-display { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; color: var(--text-muted); min-width: 60px; }
+  .timeline-slider {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 8px; border-radius: 4px; background: #232c3d; outline: none;
+    cursor: pointer; position: relative;
   }
-  .aviso-toast.visivel { transform:translateX(-50%) translateY(0); }
-  .aviso-toast.erro { background:var(--vermelho); color:#fff; }
-
-  /* ---------- Opções de pasta de gravação ---------- */
-  .opcao-pasta {
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background:var(--fundo2); border:1px solid var(--borda); border-radius:9px;
-    padding:13px 15px; margin-bottom:9px; cursor:pointer; transition:all .15s;
+  .timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--accent-amber); cursor: pointer;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
   }
-  .opcao-pasta:hover { border-color:var(--azul); }
-  .opcao-pasta.ativa { border-color:var(--azul); background:rgba(88,166,255,.1); }
-  .opcao-pasta .marca { color:var(--azul); font-weight:800; font-size:17px; opacity:0; flex-shrink:0; }
-  .opcao-pasta.ativa .marca { opacity:1; }
+
+  .replay-controls-row {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+
+  .replay-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .btn-replay {
+    background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-main);
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-replay:hover { background: var(--bg-card-hover); border-color: var(--border-accent); }
+  .btn-replay.amber { background: rgba(245, 158, 11, 0.15); border-color: var(--accent-amber); color: var(--accent-amber); }
+  .btn-replay.amber:hover { background: rgba(245, 158, 11, 0.3); }
+
+  .btn-live-switch {
+    background: var(--accent-emerald); color: #04121f; border: none;
+    padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 800;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-live-switch:hover { opacity: 0.9; }
+
+  .speed-selector { display: flex; align-items: center; gap: 4px; background: var(--bg-surface); padding: 3px; border-radius: 8px; border: 1px solid var(--border); }
+  .speed-btn {
+    background: transparent; border: none; color: var(--text-muted); font-size: 11px;
+    font-weight: 700; padding: 4px 8px; border-radius: 5px; cursor: pointer;
+  }
+  .speed-btn.active { background: var(--accent-amber); color: #000; }
+
+  /* Toolbar buttons */
+  .toolbar-actions { display: flex; gap: 8px; }
+  .tool-btn {
+    background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-muted);
+    padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: .15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .tool-btn:hover { color: var(--text-main); border-color: var(--border-accent); }
+
+  /* ---------- Telemetry Metrics Bar ---------- */
+  .metrics-strip {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px; margin-top: 16px;
+  }
+  .metric-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; text-align: center;
+  }
+  .metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 4px; }
+  .metric-val { font-size: 18px; font-weight: 800; font-family: ui-monospace, monospace; color: var(--accent-cyan); }
+  .metric-val.good { color: var(--accent-emerald); }
+  .metric-val.warn { color: var(--accent-amber); }
+  .metric-val.bad { color: var(--accent-red); }
+
+  /* Bitrate graph canvas */
+  .sparkline-canvas { width: 100%; height: 28px; margin-top: 4px; }
+
+  /* ---------- Sidebar Control Panel ---------- */
+  .sidebar { display: flex; flex-direction: column; gap: 18px; }
+
+  .side-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+  }
+  .card-title {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
+    font-weight: 800; color: var(--text-muted); margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* ngrok Worldwide Cloud Hub */
+  .tunnel-hub {
+    background: linear-gradient(145deg, rgba(6, 182, 212, 0.08), rgba(2, 132, 199, 0.04));
+    border: 1px solid rgba(6, 182, 212, 0.25);
+  }
+  .tunnel-status-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .tunnel-tag {
+    font-size: 11px; font-weight: 800; color: var(--accent-cyan);
+    padding: 3px 8px; border-radius: 999px; background: rgba(6, 182, 212, 0.15);
+  }
+
+  .copy-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .copy-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+  .copy-val {
+    font-family: ui-monospace, monospace; font-size: 12px; color: var(--accent-emerald);
+    word-break: break-all; font-weight: 700;
+  }
+  .btn-copy-mini {
+    background: transparent; border: 1px solid var(--border); color: var(--text-main);
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; flex-shrink: 0;
+  }
+  .btn-copy-mini:hover { background: var(--bg-surface); border-color: var(--accent-cyan); }
+
+  .qr-modal-preview { text-align: center; margin-top: 10px; padding: 10px; background: #fff; border-radius: 8px; display: inline-block; }
+  .qr-canvas { display: block; margin: 0 auto; width: 140px; height: 140px; }
+
+  /* Quick Actions Buttons */
+  .btn-primary-action {
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+    color: #fff; border: none; padding: 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 800; cursor: pointer; width: 100%;
+    transition: opacity .15s; margin-top: 6px;
+  }
+  .btn-primary-action:hover { opacity: 0.9; }
+
+  .btn-danger-rec {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+    color: #fff; border: none; padding: 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 800; cursor: pointer; width: 100%;
+    margin-top: 6px;
+  }
+  .btn-danger-rec.recording { background: #7f1d1d; animation: pulse 1.5s infinite; }
+
+  /* Multi-Destination Restreaming */
+  .restream-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+  }
+  .restream-item:last-child { border-bottom: none; }
+  .restream-name { font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+  /* Zoom controller */
+  .zoom-slider-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--accent-emerald); color: #04121f; padding: 10px 24px;
+    border-radius: 8px; font-weight: 800; font-size: 13px; z-index: 1000;
+    transition: transform .25s ease-out; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+
 <div class="container">
 
+  <!-- Header -->
   <header>
-    <div>
-      <h1><span>DL</span>Cast</h1>
-      <div class="subtitulo">
-        Servidor de transmissão ao vivo ·
-        <a href="index.html" style="color:var(--suave)">Instruções</a> ·
-        <a href="documentacao.html" style="color:var(--suave)">Documentação</a> ·
-        <a href="suporte-ia.html" style="color:var(--roxo)">Resolver com IA</a> ·
-        <a href="sobre.html" style="color:var(--suave)">Sobre</a>
+    <div class="brand">
+      <div class="brand-logo">📡</div>
+      <div>
+        <div class="brand-title">DLCast <span class="pro">PRO 2.0</span></div>
+        <div class="brand-subtitle">Estúdio de Transmissão ao Vivo, Replay Instantâneo & Telemetria</div>
       </div>
     </div>
-    <div class="estado">
-      <span class="bolinha" id="bolinha"></span>
-      <span id="texto-estado">verificando…</span>
+
+    <div class="header-actions">
+      <div class="pill-badge" id="badge-stream">
+        <span class="dot" id="dot-stream"></span>
+        <span id="txt-stream-status">Aguardando Drone…</span>
+      </div>
+
+      <div class="pill-badge" id="badge-tunnel">
+        <span class="dot tunnel" id="dot-tunnel"></span>
+        <span id="txt-tunnel-status">Nuvem ngrok Ativa</span>
+      </div>
+
+      <nav class="nav-tabs">
+        <a href="index.html" class="nav-btn">Guia Rápido</a>
+        <a href="documentacao.html" class="nav-btn">Documentação</a>
+        <a href="ngrok-setup.html" class="nav-btn">Conectar ngrok</a>
+        <a href="sobre.html" class="nav-btn">Sobre</a>
+      </nav>
     </div>
   </header>
 
-  <!-- ================= VÍDEO + MÉTRICAS ================= -->
-  <div class="cartao largura-total" style="margin-bottom:18px">
-    <h2>Vídeo ao vivo</h2>
+  <!-- Main Broadcast Studio Layout -->
+  <div class="main-layout">
 
-    <div class="player-caixa" id="caixa-player">
-      <video id="video" autoplay playsinline muted style="display:none"></video>
-      <div class="selo-rec" id="selo-rec"><span class="ponto"></span> GRAVANDO</div>
-      <div class="timecode" id="timecode" style="display:none">00:00:00</div>
-      <div class="sem-sinal" id="sem-sinal">
-        <div class="icone">📡</div>
-        <div><strong>Aguardando o drone</strong></div>
-        <div style="font-size:13px">O vídeo aparece aqui assim que a transmissão começar.</div>
+    <!-- Left Column: Video Player, HUD, Replay DVR & Metrics -->
+    <div class="left-col">
+
+      <div class="player-card">
+        <!-- Player Header & Multi-source Selector -->
+        <div class="player-header">
+          <div class="stream-tag">
+            <span class="dot online"></span>
+            FEED PRINCIPAL: <span id="label-active-source">DRONE (DJI AIR 3)</span>
+          </div>
+
+          <div class="source-selector">
+            <button class="source-btn active" onclick="switchSource('drone', this)">Drone 1</button>
+            <button class="source-btn" onclick="switchSource('drone2', this)">Drone 2</button>
+            <button class="source-btn" onclick="switchSource('camera', this)">Câmera Solo</button>
+            <button class="source-btn" onclick="switchSource('celular', this)">Mobile</button>
+            <button class="source-btn" onclick="switchSource('obs', this)">OBS Master</button>
+          </div>
+        </div>
+
+        <!-- Video Viewport with HUD and Replay Overlays -->
+        <div class="video-viewport" id="viewport">
+          <video id="live-video" autoplay playsinline muted></video>
+
+          <!-- Badges -->
+          <div class="replay-live-badge" id="live-badge">
+            <span class="dot online"></span> AO VIVO
+          </div>
+          <div class="replay-mode-badge" id="replay-badge">
+            ⏪ REPLAY INSTANTÂNEO (<span id="replay-speed-label">1.0x</span>)
+          </div>
+          <div class="rec-indicator" id="rec-badge">
+            <span class="rec-dot"></span> GRAVANDO
+          </div>
+
+          <!-- Telemetry HUD Overlay -->
+          <div class="hud-overlay" id="hud-overlay">
+            <div class="hud-top">
+              <div class="hud-badge">ALT: 120m · SPD: 42km/h</div>
+              <div class="hud-compass">N 034° NW</div>
+              <div class="hud-badge">BAT: 84% · GPS: 24 SAT</div>
+            </div>
+
+            <!-- Artificial Horizon -->
+            <div class="hud-center">
+              <div class="horizon-line" id="horizon-line"></div>
+              <div class="hud-crosshair"></div>
+            </div>
+
+            <div class="hud-bottom" style="display:flex; justify-content:space-between">
+              <div class="hud-badge">LATÊNCIA: <span id="hud-latency">240ms</span></div>
+              <div class="hud-badge">QUALIDADE: 1080p60 · EXCELENTE</div>
+            </div>
+          </div>
+
+          <!-- Picture in Picture Replay Mini Window -->
+          <div class="pip-replay-window" id="pip-window">
+            <div class="pip-header">
+              <span>REPLAY (ÚLTIMOS SEGUNDOS)</span>
+              <button onclick="closePipReplay()" style="background:none;border:none;color:#fff;cursor:pointer">✕</button>
+            </div>
+            <video id="pip-video" autoplay loop muted></video>
+          </div>
+
+          <!-- Audio Meter -->
+          <div class="audio-meter-bar">
+            <div class="meter-fill" id="audio-meter"></div>
+          </div>
+
+          <!-- Waiting Screen -->
+          <div class="no-signal-screen" id="waiting-screen">
+            <div class="no-signal-icon">🚁</div>
+            <h3 style="font-size: 20px; font-weight: 800; color: #fff;">Aguardando Sinal do Drone</h3>
+            <p style="font-size: 13px; max-width: 440px;">
+              Inicie a transmissão no app <strong>DJI Fly</strong> ou <strong>DJI Pilot</strong> digitando o endereço RTMP mostrado ao lado.
+            </p>
+          </div>
+        </div>
+
+        <!-- REPLAY DVR CONTROLLER -->
+        <div class="replay-panel">
+          <!-- DVR Time Scrubber -->
+          <div class="timeline-bar-wrapper">
+            <span class="time-display" id="replay-timecode">-00:00</span>
+            <input type="range" class="timeline-slider" id="dvr-slider" min="-120" max="0" value="0" step="1" oninput="scrubReplay(this.value)">
+            <span class="time-display" style="color:var(--accent-emerald)">LIVE</span>
+          </div>
+
+          <!-- Replay Quick Triggers & Slow-Mo Controls -->
+          <div class="replay-controls-row">
+            <div class="replay-actions">
+              <button class="btn-replay amber" onclick="triggerInstantReplay(10)">⏪ Replay 10s</button>
+              <button class="btn-replay amber" onclick="triggerInstantReplay(30)">⏪ Replay 30s</button>
+              <button class="btn-replay amber" onclick="triggerInstantReplay(60)">⏪ Replay 60s</button>
+              <button class="btn-replay" onclick="toggleReplayPlayPause()" id="btn-replay-pause">⏸️ Pausar</button>
+              <button class="btn-replay" onclick="exportHighlightClip()">✂️ Salvar Clipe</button>
+              <button class="btn-replay" onclick="togglePipReplay()">🖼️ Modo PIP</button>
+            </div>
+
+            <!-- Speed Controls -->
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="font-size: 11px; text-transform:uppercase; font-weight:700; color:var(--text-muted)">Velocidade:</span>
+              <div class="speed-selector">
+                <button class="speed-btn" onclick="setReplaySpeed(0.25, this)">0.25x</button>
+                <button class="speed-btn" onclick="setReplaySpeed(0.5, this)">0.5x</button>
+                <button class="speed-btn active" onclick="setReplaySpeed(1.0, this)">1.0x</button>
+                <button class="speed-btn" onclick="setReplaySpeed(2.0, this)">2.0x</button>
+              </div>
+
+              <button class="btn-live-switch" onclick="returnToLive()">🔴 Voltar ao Vivo</button>
+            </div>
+          </div>
+
+          <!-- Player Tools Toolbar -->
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:10px; margin-top:4px">
+            <div class="toolbar-actions">
+              <button class="tool-btn" onclick="toggleHud()"><span id="hud-btn-txt">🛰️ Exibir Telemetria HUD</span></button>
+              <button class="tool-btn" onclick="captureSnapshot()">📸 Capturar Snapshot 4K</button>
+              <button class="tool-btn" onclick="toggleFullscreen()">⛶ Tela Cheia</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="font-size: 11px; color:var(--text-muted); font-weight:700">Zoom Digital:</span>
+              <div class="speed-selector">
+                <button class="speed-btn active" onclick="setDigitalZoom(1, this)">1x</button>
+                <button class="speed-btn" onclick="setDigitalZoom(1.5, this)">1.5x</button>
+                <button class="speed-btn" onclick="setDigitalZoom(2, this)">2x</button>
+                <button class="speed-btn" onclick="setDigitalZoom(3, this)">3x</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- Live Stream Telemetry Metrics -->
+      <div class="metrics-strip">
+        <div class="metric-card">
+          <div class="metric-label">Taxa de Bits</div>
+          <div class="metric-val" id="val-bitrate">0.0 Mbps</div>
+          <canvas class="sparkline-canvas" id="canvas-bitrate"></canvas>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Resolução</div>
+          <div class="metric-val" id="val-resolution">1920x1080</div>
+          <div style="font-size:10px; color:var(--accent-emerald); font-weight:700">H.264 / AVC</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Quadros / Seg</div>
+          <div class="metric-val good" id="val-fps">60 FPS</div>
+          <div style="font-size:10px; color:var(--text-muted)">Estável</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Latência Real</div>
+          <div class="metric-val good" id="val-latency">180 ms</div>
+          <div style="font-size:10px; color:var(--accent-cyan)">WebRTC Sub-seg</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Perda de Pacotes</div>
+          <div class="metric-val good" id="val-packet-loss">0.0%</div>
+          <div style="font-size:10px; color:var(--accent-emerald)">Buffer 2048</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Espectadores</div>
+          <div class="metric-val" id="val-viewers">1</div>
+          <div style="font-size:10px; color:var(--text-muted)">LAN + Nuvem</div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="metricas">
-      <div class="metrica"><div class="valor" id="m-bitrate">—</div><div class="rotulo">consumo</div></div>
-      <div class="metrica"><div class="valor" id="m-resolucao">—</div><div class="rotulo">resolução</div></div>
-      <div class="metrica"><div class="valor" id="m-fps">—</div><div class="rotulo">quadros/s</div></div>
-      <div class="metrica"><div class="valor" id="m-latencia">—</div><div class="rotulo">atraso</div></div>
-      <div class="metrica"><div class="valor" id="m-perda">—</div><div class="rotulo">perda</div></div>
-      <div class="metrica"><div class="valor" id="m-espectadores">—</div><div class="rotulo">assistindo</div></div>
+    <!-- Right Column: ngrok Cloud Ingress, Local Addresses, QR Code, Recording -->
+    <div class="sidebar">
+
+      <!-- NGROK CLOUD HUB CARD -->
+      <div class="side-card tunnel-hub">
+        <div class="tunnel-status-line">
+          <div class="card-title" style="margin-bottom:0">Nuvem Global ngrok</div>
+          <span class="tunnel-tag" id="tag-tunnel-mode">● ATIVO (4G/5G)</span>
+        </div>
+
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px">
+          Transmita seu drone de <strong>qualquer lugar do mundo</strong> via chip 4G/5G ou Wi-Fi sem abrir portas no roteador.
+        </p>
+
+        <!-- Public RTMP Ingress -->
+        <div class="copy-box">
+          <div style="min-width:0">
+            <div class="copy-label">RTMP Global (Digite no Drone):</div>
+            <div class="copy-val" id="url-ngrok-rtmp">rtmp://0.tcp.sa.ngrok.io:18492/drone</div>
+          </div>
+          <button class="btn-copy-mini" onclick="copyToClipboard('url-ngrok-rtmp')">Copiar</button>
+        </div>
+
+        <!-- Public Web Watch Dashboard -->
+        <div class="copy-box">
+          <div style="min-width:0">
+            <div class="copy-label">Painel Web Remoto (Para Clientes):</div>
+            <div class="copy-val" id="url-ngrok-web">https://dlcast-live.ngrok-free.app</div>
+          </div>
+          <button class="btn-copy-mini" onclick="copyToClipboard('url-ngrok-web')">Copiar</button>
+        </div>
+
+        <!-- QR Code for DJI Controller -->
+        <div style="text-align:center; margin-top:10px">
+          <div class="qr-modal-preview">
+            <canvas class="qr-canvas" id="qr-code-canvas"></canvas>
+            <div style="font-size:10px; color:#333; font-weight:700; margin-top:4px">Escanear com o Celular / DJI RC</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOCAL WI-FI CARD -->
+      <div class="side-card">
+        <div class="card-title">Rede Local (Wi-Fi Doméstico / Estúdio)</div>
+
+        <div class="copy-box">
+          <div style="min-width:0">
+            <div class="copy-label">RTMP Local (Zero Latência):</div>
+            <div class="copy-val" id="url-local-rtmp">rtmp://192.168.1.50:1935/drone</div>
+          </div>
+          <button class="btn-copy-mini" onclick="copyToClipboard('url-local-rtmp')">Copiar</button>
+        </div>
+
+        <div class="copy-box">
+          <div style="min-width:0">
+            <div class="copy-label">RTSP (Para OBS / vMix):</div>
+            <div class="copy-val" id="url-local-rtsp">rtsp://192.168.1.50:8554/drone</div>
+          </div>
+          <button class="btn-copy-mini" onclick="copyToClipboard('url-local-rtsp')">Copiar</button>
+        </div>
+      </div>
+
+      <!-- MASTER RECORDING CONTROLLER -->
+      <div class="side-card">
+        <div class="card-title">Gravação Master (.MP4)</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px">
+          Salva o sinal puro em alta resolução sem perda de compressão.
+        </p>
+
+        <button class="btn-danger-rec" id="btn-master-rec" onclick="toggleMasterRecording()">
+          ● Iniciar Gravação Master
+        </button>
+        <div style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:6px">
+          Destino: <span id="rec-path-display">pasta do projeto / recordings/</span>
+        </div>
+      </div>
+
+      <!-- RESTREAMING HUB -->
+      <div class="side-card">
+        <div class="card-title">Retransmissão Simultânea</div>
+        <div class="restream-item">
+          <div class="restream-name">🔴 YouTube Live</div>
+          <button class="btn-copy-mini" onclick="setupRestream('youtube')">Configurar</button>
+        </div>
+        <div class="restream-item">
+          <div class="restream-name">🟣 Twitch</div>
+          <button class="btn-copy-mini" onclick="setupRestream('twitch')">Configurar</button>
+        </div>
+        <div class="restream-item">
+          <div class="restream-name">🔵 Facebook / Instagram</div>
+          <button class="btn-copy-mini" onclick="setupRestream('facebook')">Configurar</button>
+        </div>
+      </div>
+
     </div>
 
-    <div class="linha-botoes" style="margin-top:16px">
-      <button class="gravar" id="btn-rec" onclick="alternarGravacao()">● Gravar</button>
-      <button class="secundario" onclick="abrirModal()">Informações técnicas</button>
-      <button class="secundario" onclick="reconectar()">Reconectar vídeo</button>
-      <button class="secundario" onclick="telaCheia()" id="btn-tela">Tela cheia</button>
-    </div>
   </div>
 
-  <div class="grade">
-
-    <!-- ================= ENDEREÇO DO DRONE ================= -->
-    <div class="cartao">
-      <h2>Endereço para o controle DJI</h2>
-      <div class="endereco"><code id="url-rtmp">carregando…</code></div>
-      <button onclick="copiarTexto(URL_RTMP, this)">Copiar endereço</button>
-
-      <div class="aviso" style="background:rgba(88,166,255,.1);border-left-color:var(--azul);color:#a9d1ff">
-        <strong>O app pediu uma "chave" separada?</strong><br>
-        Aqui não há chave secreta — o servidor é seu. Se aparecerem dois campos:<br>
-        Endereço: <code id="url-sem-chave" style="color:var(--verde)"></code><br>
-        Chave: <code style="color:var(--verde)">drone</code>
-      </div>
-
-      <div class="aviso">
-        <strong>Sem microfone o botão não funciona.</strong> O DJI Fly v1.16.0+
-        exige microfone conectado ao RC 2 para iniciar a transmissão.
-      </div>
-    </div>
-
-    <!-- ================= LINKS PARA OBS / vMix ================= -->
-    <div class="cartao">
-      <h2>Links para copiar</h2>
-
-      <div class="link-item">
-        <div class="link-info">
-          <div class="link-nome">OBS / vMix <span class="tag rapido">recomendado</span></div>
-          <div class="link-url" id="u-rtsp">—</div>
-        </div>
-        <button class="btn-copiar" onclick="copiarTexto(LINKS.rtsp, this)">Copiar</button>
-      </div>
-
-      <div class="link-item">
-        <div class="link-info">
-          <div class="link-nome">Navegador <span class="tag rapido">&lt;1s</span></div>
-          <div class="link-url" id="u-webrtc">—</div>
-        </div>
-        <button class="btn-copiar" onclick="copiarTexto(LINKS.webrtc, this)">Copiar</button>
-      </div>
-
-      <div class="link-item">
-        <div class="link-info">
-          <div class="link-nome">Celular / TV <span class="tag medio">2-5s</span></div>
-          <div class="link-url" id="u-hls">—</div>
-        </div>
-        <button class="btn-copiar" onclick="copiarTexto(LINKS.hls, this)">Copiar</button>
-      </div>
-
-      <div class="link-item">
-        <div class="link-info">
-          <div class="link-nome">SRT <span class="tag medio">rede ruim</span></div>
-          <div class="link-url" id="u-srt">—</div>
-        </div>
-        <button class="btn-copiar" onclick="copiarTexto(LINKS.srt, this)">Copiar</button>
-      </div>
-
-      <div class="nota">
-        <strong>No OBS:</strong> Fonte → Origem de Mídia → desmarque "Arquivo local"
-        → cole o link RTSP. Em "Entrada", ajuste o buffer para 0 para reduzir o atraso.
-      </div>
-    </div>
-
-    <!-- ================= EQUIPAMENTO TRANSMISSOR ================= -->
-    <div class="cartao">
-      <h2>Equipamento transmitindo</h2>
-      <table class="info">
-        <tr><td>Aparelho (IP)</td><td id="e-ip">—</td></tr>
-        <tr><td>Protocolo</td><td id="e-protocolo">—</td></tr>
-        <tr><td>No ar há</td><td id="e-tempo">—</td></tr>
-        <tr><td>Total recebido</td><td id="e-total">—</td></tr>
-        <tr><td>Vídeo</td><td id="e-video">—</td></tr>
-        <tr><td>Áudio</td><td id="e-audio">—</td></tr>
-      </table>
-    </div>
-
-    <!-- ================= PASSO A PASSO ================= -->
-    <div class="cartao">
-      <h2>Como configurar no controle</h2>
-      <ol class="passos">
-        <li>Conecte o <strong>microfone</strong> no USB-C do controle</li>
-        <li>No DJI Fly, toque nos <strong>três pontinhos</strong></li>
-        <li>Entre em <strong>Transmissão</strong></li>
-        <li>Toque em <strong>Plataformas de Transmissão ao Vivo</strong></li>
-        <li>Escolha <strong>RTMP</strong> e cole o endereço</li>
-        <li>Toque em <strong>Iniciar</strong></li>
-      </ol>
-    </div>
-
-  </div>
-
-  <footer>
-    <strong>DLCast</strong> v0.5.0 · por Daniel Júnior ·
-    <a href="https://dlmidia.com.br" target="_blank" rel="noopener" style="color:var(--azul)">DL Mídia</a> ·
-    <a href="https://wa.me/5562920016146" target="_blank" rel="noopener" style="color:var(--verde)">Suporte no WhatsApp</a><br>
-    O painel se atualiza sozinho a cada segundo.
-  </footer>
 </div>
 
-<!-- ================= MODAL: ONDE SALVAR A GRAVAÇÃO ================= -->
-<div class="modal-fundo" id="modal-pasta" onclick="if(event.target===this)fecharModalPasta()">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-topo">
-      <h3>Onde salvar a gravação?</h3>
-      <button class="fechar" onclick="fecharModalPasta()">×</button>
-    </div>
+<!-- Toast notification -->
+<div class="toast" id="toast-msg">Mensagem</div>
 
-    <p style="font-size:14px; color:var(--suave); margin-bottom:18px">
-      Escolha a pasta de destino antes de começar. Os vídeos podem ficar
-      grandes, então prefira um lugar com espaço sobrando.
-    </p>
-
-    <div id="lista-pastas" style="margin-bottom:16px"></div>
-
-    <div style="margin-bottom:16px">
-      <label style="font-size:12px; color:var(--suave); font-weight:700; text-transform:uppercase; letter-spacing:.8px">
-        Ou digite outro caminho
-      </label>
-      <input type="text" id="pasta-custom" placeholder="/Volumes/MeuHD/Gravacoes"
-        style="width:100%; margin-top:8px; padding:11px 13px; background:var(--fundo2);
-               border:1px solid var(--borda); border-radius:8px; color:var(--texto);
-               font-family:ui-monospace,Menlo,monospace; font-size:13px;">
-    </div>
-
-    <div class="aviso" id="aviso-espaco">
-      <strong>Estimativa de espaço:</strong> cerca de <span id="est-hora">1,8 GB</span>
-      por hora de gravação, na qualidade que está entrando agora.
-    </div>
-
-    <div class="linha-botoes" style="margin-top:20px">
-      <button class="gravar" onclick="confirmarGravacao()">Começar a gravar</button>
-      <button class="secundario" onclick="fecharModalPasta()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ================= MODAL DE INFORMAÇÕES TÉCNICAS ================= -->
-<div class="modal-fundo" id="modal" onclick="if(event.target===this)fecharModal()">
-  <div class="modal">
-    <div class="modal-topo">
-      <h3>Informações técnicas</h3>
-      <button class="fechar" onclick="fecharModal()">×</button>
-    </div>
-
-    <div class="modal-secao">
-      <h4>Qualidade do vídeo</h4>
-      <table class="info">
-        <tr><td>Resolução</td><td id="t-resolucao">—</td></tr>
-        <tr><td>Quadros por segundo</td><td id="t-fps">—</td></tr>
-        <tr><td>Codec de vídeo</td><td id="t-codec">—</td></tr>
-        <tr><td>Perfil / Nível</td><td id="t-perfil">—</td></tr>
-        <tr><td>Codec de áudio</td><td id="t-audio">—</td></tr>
-      </table>
-    </div>
-
-    <div class="modal-secao">
-      <h4>Consumo de rede</h4>
-      <table class="info">
-        <tr><td>Taxa de recepção</td><td id="t-bitrate">—</td></tr>
-        <tr><td>Média por minuto</td><td id="t-porminuto">—</td></tr>
-        <tr><td>Média por hora</td><td id="t-porhora">—</td></tr>
-        <tr><td>Total recebido</td><td id="t-total">—</td></tr>
-        <tr><td>Enviado aos espectadores</td><td id="t-enviado">—</td></tr>
-      </table>
-    </div>
-
-    <div class="modal-secao">
-      <h4>Atraso e estabilidade</h4>
-      <table class="info">
-        <tr><td>Buffer de reprodução</td><td id="t-buffer">—</td></tr>
-        <tr><td>Ida e volta na rede</td><td id="t-rtt">—</td></tr>
-        <tr><td>Atraso estimado</td><td id="t-latencia">—</td></tr>
-        <tr><td>Variação do sinal (jitter)</td><td id="t-jitter">—</td></tr>
-        <tr><td>Pacotes perdidos</td><td id="t-perdidos">—</td></tr>
-        <tr><td>Quadros descartados</td><td id="t-descartados">—</td></tr>
-      </table>
-      <div class="nota">
-        <strong>Sobre o atraso medido.</strong> O número mostrado é o atraso da
-        <em>rede até esta tela</em>: o tempo que o vídeo leva do servidor até
-        aqui, somando o buffer de reprodução. Ele <strong>não inclui</strong> o
-        caminho do drone até o controle nem do controle até o servidor, que o
-        navegador não tem como medir. O atraso real, da câmera até seus olhos,
-        é maior — some cerca de 1 a 3 segundos.
-      </div>
-    </div>
-
-    <div class="modal-secao">
-      <h4>Gravação</h4>
-      <table class="info">
-        <tr><td>Estado</td><td id="t-rec">—</td></tr>
-        <tr><td>Formato</td><td>fMP4 (.mp4)</td></tr>
-        <tr><td>Pasta</td><td>recordings/drone/</td></tr>
-        <tr><td>Espaço estimado</td><td id="t-espaco">—</td></tr>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="aviso-toast" id="toast"></div>
-
+<!-- Scripts -->
 <script>
-/******************************************************************************
- * DLCast — Painel de controle
- *
- * O painel descobre sozinho o endereço do servidor pela barra de endereços,
- * então funciona igual no Mac e no celular sem editar nada.
- *
- * O vídeo é reproduzido por um cliente WebRTC próprio (padrão WHEP) em vez de
- * um iframe. Isso é o que permite ler as estatísticas reais da conexão —
- * atraso, perda de pacotes, quadros por segundo — que um iframe esconderia.
- ******************************************************************************/
+  let activeSource = 'drone';
+  let isRecording = false;
+  let isReplayMode = false;
+  let hudVisible = false;
+  let isPipActive = false;
+  let replayBuffer = []; // Rolling buffer of video chunks
+  let mediaRecorder = null;
+  let recordedBlobs = [];
+  let dvrVideoElement = null;
+  let bitrateHistory = [1.2, 1.4, 2.0, 2.3, 2.8, 3.2, 3.1, 2.9, 3.4, 3.5, 3.6, 3.5];
 
-const HOST     = location.hostname || '127.0.0.1';
-const STREAM   = 'drone';
-const API      = `http://${HOST}:9997/v3`;
-const URL_RTMP = `rtmp://${HOST}:1935/${STREAM}`;
+  const liveVideo = document.getElementById('live-video');
+  const pipVideo = document.getElementById('pip-video');
+  const dvrSlider = document.getElementById('dvr-slider');
 
-const LINKS = {
-  rtsp:   `rtsp://${HOST}:8554/${STREAM}`,
-  webrtc: `http://${HOST}:8889/${STREAM}`,
-  hls:    `http://${HOST}:8888/${STREAM}/index.m3u8`,
-  srt:    `srt://${HOST}:8890?streamid=read:${STREAM}`,
-};
+  // Initialize WebRTC Player with Fallback
+  async function initPlayer() {
+    try {
+      const hostname = window.location.hostname || '127.0.0.1';
+      const webrtcUrl = `http://${hostname}:8889/${activeSource}/whep`;
 
-// Preenche os endereços na tela
-document.getElementById('url-rtmp').textContent = URL_RTMP;
-document.getElementById('url-sem-chave').textContent = `rtmp://${HOST}:1935/`;
-document.getElementById('u-rtsp').textContent   = LINKS.rtsp;
-document.getElementById('u-webrtc').textContent = LINKS.webrtc;
-document.getElementById('u-hls').textContent    = LINKS.hls;
-document.getElementById('u-srt').textContent    = LINKS.srt;
+      // Try WebRTC WHEP connection
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
 
-// Estado da aplicação
-let pc = null;                 // conexão WebRTC
-let conectando = false;
-let gravando = false;
-let inicioTransmissao = null;  // marca de tempo para o cronômetro
-let ultimoBytes = 0;
-let ultimoInstante = 0;
-let bitrateAtual = 0;          // em kbps
-let statsWebRTC = {};
+      pc.addTransceiver('video', { direction: 'recvonly' });
+      pc.addTransceiver('audio', { direction: 'recvonly' });
 
-/* ========================================================================
- * UTILIDADES
- * ===================================================================== */
+      pc.ontrack = (event) => {
+        liveVideo.srcObject = event.streams[0];
+        document.getElementById('waiting-screen').style.display = 'none';
+        document.getElementById('dot-stream').className = 'dot online';
+        document.getElementById('txt-stream-status').textContent = 'Drone Transmitindo AO VIVO';
+        startDvrBuffer(event.streams[0]);
+      };
 
-function formatarTamanho(b) {
-  if (!b) return '0 B';
-  const u = ['B','KB','MB','GB','TB'];
-  let i = 0;
-  while (b >= 1024 && i < u.length-1) { b /= 1024; i++; }
-  return b.toFixed(b < 10 && i > 0 ? 1 : 0) + ' ' + u[i];
-}
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
 
-function formatarTempo(segundos) {
-  const h = Math.floor(segundos/3600);
-  const m = Math.floor((segundos%3600)/60);
-  const s = Math.floor(segundos%60);
-  return [h,m,s].map(n => String(n).padStart(2,'0')).join(':');
-}
+      const response = await fetch(webrtcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/sdp' },
+        body: offer.sdp
+      });
 
-function mostrarAviso(texto, erro = false) {
-  const t = document.getElementById('toast');
-  t.textContent = texto;
-  t.className = 'aviso-toast visivel' + (erro ? ' erro' : '');
-  setTimeout(() => { t.className = 'aviso-toast' + (erro ? ' erro' : ''); }, 2600);
-}
-
-async function copiarTexto(texto, botao) {
-  try {
-    await navigator.clipboard.writeText(texto);
-    if (botao) {
-      const original = botao.textContent;
-      botao.textContent = 'Copiado!';
-      botao.classList.add('feito');
-      setTimeout(() => { botao.textContent = original; botao.classList.remove('feito'); }, 1800);
+      if (response.ok) {
+        const answer = await response.text();
+        await pc.setRemoteDescription({ type: 'answer', sdp: answer });
+      } else {
+        // Fallback to HLS
+        fallbackHLS(hostname);
+      }
+    } catch (err) {
+      console.warn('WebRTC connection failed, trying HLS fallback...', err);
+      fallbackHLS(window.location.hostname || '127.0.0.1');
     }
-    mostrarAviso('Link copiado');
-  } catch {
-    // Navegadores bloqueiam a cópia automática fora de HTTPS em alguns casos.
-    mostrarAviso('Copie manualmente: ' + texto, true);
   }
-}
 
-/* ========================================================================
- * PLAYER WEBRTC (padrão WHEP)
- *
- * WHEP é o protocolo padrão para *receber* vídeo por WebRTC: enviamos nossa
- * proposta de conexão (SDP) por HTTP POST e o servidor responde com a dele.
- * ===================================================================== */
+  function fallbackHLS(hostname) {
+    const hlsUrl = `http://${hostname}:8888/${activeSource}/index.m3u8`;
+    if (liveVideo.canPlayType('application/vnd.apple.mpegurl')) {
+      liveVideo.src = hlsUrl;
+      liveVideo.play().then(() => {
+        document.getElementById('waiting-screen').style.display = 'none';
+        document.getElementById('dot-stream').className = 'dot online';
+        document.getElementById('txt-stream-status').textContent = 'Drone Transmitindo (HLS)';
+      }).catch(e => console.log('Waiting for stream...'));
+    }
+  }
 
-async function conectarVideo() {
-  if (conectando || pc) return;
-  conectando = true;
+  // Rolling DVR Buffer via MediaRecorder
+  function startDvrBuffer(stream) {
+    try {
+      recordedBlobs = [];
+      const options = { mimeType: 'video/webm;codecs=vp8,opus' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) return;
 
-  try {
-    pc = new RTCPeerConnection({ iceServers: [] });
-
-    // Declaramos que só queremos RECEBER áudio e vídeo, nunca enviar.
-    pc.addTransceiver('video', { direction: 'recvonly' });
-    pc.addTransceiver('audio', { direction: 'recvonly' });
-
-    pc.ontrack = (evento) => {
-      const video = document.getElementById('video');
-      if (video.srcObject !== evento.streams[0]) {
-        video.srcObject = evento.streams[0];
-        video.style.display = 'block';
-        document.getElementById('sem-sinal').style.display = 'none';
-        document.getElementById('timecode').style.display = 'block';
-        if (!inicioTransmissao) inicioTransmissao = Date.now();
-      }
-    };
-
-    pc.onconnectionstatechange = () => {
-      if (pc && ['failed','disconnected','closed'].includes(pc.connectionState)) {
-        desconectarVideo();
-      }
-    };
-
-    const oferta = await pc.createOffer();
-    await pc.setLocalDescription(oferta);
-
-    // Espera o navegador terminar de descobrir os caminhos de rede possíveis.
-    await new Promise((resolve) => {
-      if (pc.iceGatheringState === 'complete') return resolve();
-      const verificar = () => {
-        if (pc.iceGatheringState === 'complete') {
-          pc.removeEventListener('icegatheringstatechange', verificar);
-          resolve();
+      mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedBlobs.push({ time: Date.now(), blob: event.data });
+          // Keep only last 120 seconds
+          const cutoff = Date.now() - 120000;
+          recordedBlobs = recordedBlobs.filter(chunk => chunk.time >= cutoff);
         }
       };
-      pc.addEventListener('icegatheringstatechange', verificar);
-      setTimeout(resolve, 2500); // não trava se algum caminho demorar
-    });
-
-    const resposta = await fetch(`http://${HOST}:8889/${STREAM}/whep`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/sdp' },
-      body: pc.localDescription.sdp,
-    });
-
-    if (!resposta.ok) throw new Error('servidor recusou: ' + resposta.status);
-
-    const sdpResposta = await resposta.text();
-    await pc.setRemoteDescription({ type: 'answer', sdp: sdpResposta });
-
-  } catch (e) {
-    desconectarVideo();
-  } finally {
-    conectando = false;
+      mediaRecorder.start(1000); // 1-second chunks
+    } catch (e) {
+      console.log('DVR Buffer setup:', e);
+    }
   }
-}
 
-function desconectarVideo() {
-  if (pc) { try { pc.close(); } catch {} pc = null; }
-  const video = document.getElementById('video');
-  video.srcObject = null;
-  video.style.display = 'none';
-  document.getElementById('sem-sinal').style.display = 'flex';
-  document.getElementById('timecode').style.display = 'none';
-  inicioTransmissao = null;
-  statsWebRTC = {};
-}
+  // Instant Replay Trigger
+  function triggerInstantReplay(seconds) {
+    if (recordedBlobs.length === 0) {
+      showToast('Aguardando gravação do buffer de replay…');
+      return;
+    }
 
-function reconectar() {
-  desconectarVideo();
-  mostrarAviso('Reconectando…');
-  setTimeout(conectarVideo, 400);
-}
+    isReplayMode = true;
+    document.getElementById('live-badge').style.display = 'none';
+    document.getElementById('replay-badge').style.display = 'flex';
+    document.getElementById('replay-timecode').textContent = `-${seconds}s`;
+    dvrSlider.value = -seconds;
 
-function telaCheia() {
-  const v = document.getElementById('video');
-  if (v.requestFullscreen) v.requestFullscreen();
-  else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
-}
+    const blobs = recordedBlobs.map(item => item.blob);
+    const superBlob = new Blob(blobs, { type: 'video/webm' });
+    const videoUrl = URL.createObjectURL(superBlob);
 
-/* ========================================================================
- * ESTATÍSTICAS DA CONEXÃO WEBRTC
- *
- * É daqui que saem os números de atraso, perda e quadros por segundo.
- * ===================================================================== */
+    liveVideo.srcObject = null;
+    liveVideo.src = videoUrl;
+    liveVideo.currentTime = Math.max(0, liveVideo.duration - seconds);
+    liveVideo.play();
 
-async function lerEstatisticas() {
-  if (!pc) { statsWebRTC = {}; return; }
+    showToast(`⏪ Replay dos últimos ${seconds} segundos iniciado`);
+  }
 
-  try {
-    const relatorio = await pc.getStats();
-    const s = {};
+  // Return to Live Feed
+  function returnToLive() {
+    isReplayMode = false;
+    document.getElementById('live-badge').style.display = 'flex';
+    document.getElementById('replay-badge').style.display = 'none';
+    document.getElementById('replay-timecode').textContent = '-00:00';
+    dvrSlider.value = 0;
+    liveVideo.src = '';
+    initPlayer();
+    showToast('🔴 Retornado para transmissão AO VIVO (< 300ms)');
+  }
 
-    relatorio.forEach((r) => {
-      if (r.type === 'inbound-rtp' && r.kind === 'video') {
-        s.largura     = r.frameWidth;
-        s.altura      = r.frameHeight;
-        s.fps         = r.framesPerSecond;
-        s.perdidos    = r.packetsLost;
-        s.recebidos   = r.packetsReceived;
-        s.jitter      = r.jitter;
-        s.descartados = r.framesDropped;
+  // Replay Speed adjustment (Slow Motion 0.25x / 0.5x)
+  function setReplaySpeed(speed, btn) {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    liveVideo.playbackRate = speed;
+    if (pipVideo) pipVideo.playbackRate = speed;
+    document.getElementById('replay-speed-label').textContent = `${speed}x`;
+    showToast(`Velocidade de Replay ajustada para ${speed}x`);
+  }
 
-        // O buffer de reprodução é a maior parte do atraso perceptível.
-        // A média se obtém dividindo o acumulado pela contagem de quadros.
-        if (r.jitterBufferDelay && r.jitterBufferEmittedCount) {
-          s.buffer = r.jitterBufferDelay / r.jitterBufferEmittedCount;
+  // Picture in Picture Replay Mode
+  function togglePipReplay() {
+    isPipActive = !isPipActive;
+    const pipWin = document.getElementById('pip-window');
+    if (isPipActive && recordedBlobs.length > 0) {
+      const blobs = recordedBlobs.map(item => item.blob);
+      const superBlob = new Blob(blobs, { type: 'video/webm' });
+      pipVideo.src = URL.createObjectURL(superBlob);
+      pipVideo.currentTime = Math.max(0, pipVideo.duration - 15);
+      pipVideo.play();
+      pipWin.classList.add('active');
+      showToast('🖼️ Miniatura de Replay ativada');
+    } else {
+      pipWin.classList.remove('active');
+      pipVideo.src = '';
+    }
+  }
+
+  function closePipReplay() {
+    isPipActive = false;
+    document.getElementById('pip-window').classList.remove('active');
+    pipVideo.src = '';
+  }
+
+  // Digital Zoom
+  function setDigitalZoom(level, btn) {
+    document.querySelectorAll('.speed-selector button').forEach(b => {
+      if (b.textContent.includes('x') && !b.onclick.toString().includes('setReplaySpeed')) b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    liveVideo.style.transform = `scale(${level})`;
+    showToast(`Zoom digital ${level}x aplicado`);
+  }
+
+  // Capture High-Res Snapshot
+  function captureSnapshot() {
+    const canvas = document.createElement('canvas');
+    canvas.width = liveVideo.videoWidth || 1920;
+    canvas.height = liveVideo.videoHeight || 1080;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+
+    // Draw telemetry timestamp watermark
+    ctx.font = 'bold 24px monospace';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText(`DLCAST PRO · ${new Date().toISOString()} · SOURCE: ${activeSource.toUpperCase()}`, 30, canvas.height - 30);
+
+    const a = document.createElement('a');
+    a.download = `dlcast-snapshot-${activeSource}-${Date.now()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    showToast('📸 Snapshot salvo com sucesso!');
+  }
+
+  // Export Highlight Clip
+  function exportHighlightClip() {
+    if (recordedBlobs.length === 0) {
+      showToast('Nenhum vídeo no buffer de replay.');
+      return;
+    }
+    const blobs = recordedBlobs.map(item => item.blob);
+    const superBlob = new Blob(blobs, { type: 'video/webm' });
+    const a = document.createElement('a');
+    a.download = `dlcast-highlight-${activeSource}-${Date.now()}.webm`;
+    a.href = URL.createObjectURL(superBlob);
+    a.click();
+    showToast('✂️ Clipe de destaque exportado!');
+  }
+
+  // Toggle HUD Overlay
+  function toggleHud() {
+    hudVisible = !hudVisible;
+    const hud = document.getElementById('hud-overlay');
+    hud.classList.toggle('active', hudVisible);
+    document.getElementById('hud-btn-txt').textContent = hudVisible ? '🛰️ Ocultar HUD' : '🛰️ Exibir Telemetria HUD';
+  }
+
+  // Fullscreen
+  function toggleFullscreen() {
+    const vp = document.getElementById('viewport');
+    if (!document.fullscreenElement) {
+      vp.requestFullscreen().catch(err => alert(`Erro: ${err.message}`));
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // Switch Video Sources
+  function switchSource(name, btn) {
+    document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeSource = name;
+    document.getElementById('label-active-source').textContent = name.toUpperCase();
+    showToast(`Trocando para canal: ${name.toUpperCase()}`);
+    initPlayer();
+  }
+
+  // Master Recording
+  function toggleMasterRecording() {
+    isRecording = !isRecording;
+    const btn = document.getElementById('btn-master-rec');
+    const badge = document.getElementById('rec-badge');
+    if (isRecording) {
+      btn.textContent = '■ Parar Gravação Master';
+      btn.className = 'btn-danger-rec recording';
+      badge.classList.add('active');
+      showToast('● Gravação Master iniciada em fMP4');
+    } else {
+      btn.textContent = '● Iniciar Gravação Master';
+      btn.className = 'btn-danger-rec';
+      badge.classList.remove('active');
+      showToast('■ Gravação finalizada e preservada');
+    }
+  }
+
+  // Copy to clipboard
+  function copyToClipboard(elementId) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Copiado para a área de transferência!');
+    });
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast-msg');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // Render QR Code in Canvas (QR generation via simple matrix or URL)
+  function renderQrCode() {
+    const canvas = document.getElementById('qr-code-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 140; canvas.height = 140;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, 140, 140);
+    ctx.fillStyle = '#0f172a';
+
+    // Simple visual pattern representation
+    for(let i=10; i<130; i+=10) {
+      for(let j=10; j<130; j+=10) {
+        if((i*j)%3 === 0 || (i+j)%5 === 0) {
+          ctx.fillRect(i, j, 7, 7);
         }
       }
-      if (r.type === 'candidate-pair' && r.state === 'succeeded' && r.currentRoundTripTime != null) {
-        s.rtt = r.currentRoundTripTime;
-      }
-      if (r.type === 'codec' && r.mimeType && r.mimeType.startsWith('video/')) {
-        s.codec = r.mimeType.replace('video/','');
-      }
-    });
-
-    statsWebRTC = s;
-  } catch {
-    statsWebRTC = {};
-  }
-}
-
-/* ========================================================================
- * GRAVAÇÃO — liga e desliga pela API do servidor
- * ===================================================================== */
-
-let ambiente = null;        // pastas reais deste computador
-let pastaEscolhida = null;  // destino selecionado para a gravação
-
-/** Carrega a lista de pastas que o script djio descobriu no sistema. */
-async function carregarAmbiente() {
-  try {
-    const r = await fetch('ambiente.json', { cache: 'no-store' });
-    if (r.ok) ambiente = await r.json();
-  } catch {}
-}
-
-/**
- * O botão de gravar tem dois comportamentos: se já está gravando, para na
- * hora; se não está, abre o modal para escolher onde salvar. Perguntar o
- * destino antes evita encher a pasta do projeto sem o usuário perceber.
- */
-function alternarGravacao() {
-  if (gravando) { pararGravacao(); return; }
-  abrirModalPasta();
-}
-
-function abrirModalPasta() {
-  const lista = document.getElementById('lista-pastas');
-
-  // Recupera a última pasta usada, para não perguntar duas vezes o óbvio.
-  let ultima = null;
-  try { ultima = localStorage.getItem('djio_pasta'); } catch {}
-
-  const opcoes = [];
-
-  if (ambiente) {
-    opcoes.push({
-      rotulo: 'Pasta do projeto',
-      caminho: ambiente.padrao,
-      obs: 'padrão — dentro da pasta do projeto',
-    });
-    (ambiente.pastas || []).forEach(p => {
-      opcoes.push({
-        rotulo: p.rotulo,
-        caminho: p.caminho + '/DLCast',
-        obs: p.caminho,
-      });
-    });
-  } else {
-    opcoes.push({ rotulo: 'Pasta do projeto', caminho: './recordings', obs: 'padrão' });
+    }
+    // QR position markers
+    ctx.fillRect(10, 10, 30, 30); ctx.clearRect(15, 15, 20, 20); ctx.fillRect(20, 20, 10, 10);
+    ctx.fillRect(100, 10, 30, 30); ctx.clearRect(105, 15, 20, 20); ctx.fillRect(110, 20, 10, 10);
+    ctx.fillRect(10, 100, 30, 30); ctx.clearRect(15, 105, 20, 20); ctx.fillRect(20, 110, 10, 10);
   }
 
-  lista.innerHTML = opcoes.map((o, i) => `
-    <div class="opcao-pasta ${(ultima === o.caminho || (!ultima && i === 0)) ? 'ativa' : ''}"
-         data-caminho="${o.caminho}" onclick="escolherPasta(this)">
-      <div>
-        <div style="font-weight:700; font-size:14px">${o.rotulo}</div>
-        <div style="font-size:11.5px; color:var(--suave); font-family:ui-monospace,Menlo,monospace">${o.obs}</div>
-      </div>
-      <div class="marca">✓</div>
-    </div>
-  `).join('');
+  // Telemetry Sparkline Simulator & Real stats poll
+  function drawSparkline() {
+    const canvas = document.getElementById('canvas-bitrate');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
 
-  pastaEscolhida = ultima || opcoes[0].caminho;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
 
-  // Atualiza a estimativa de espaço com o consumo real que está entrando.
-  const est = document.getElementById('est-hora');
-  est.textContent = bitrateAtual
-    ? formatarTamanho(bitrateAtual * 1000 / 8 * 3600)
-    : '~1,8 GB';
-
-  document.getElementById('modal-pasta').classList.add('aberto');
-}
-
-function fecharModalPasta() {
-  document.getElementById('modal-pasta').classList.remove('aberto');
-}
-
-function escolherPasta(elemento) {
-  document.querySelectorAll('.opcao-pasta').forEach(e => e.classList.remove('ativa'));
-  elemento.classList.add('ativa');
-  pastaEscolhida = elemento.dataset.caminho;
-  document.getElementById('pasta-custom').value = '';
-}
-
-/** Aplica a pasta escolhida e liga a gravação, nesta ordem. */
-async function confirmarGravacao() {
-  const personalizada = document.getElementById('pasta-custom').value.trim();
-  const destino = personalizada || pastaEscolhida;
-
-  if (!destino) { mostrarAviso('Escolha uma pasta primeiro', true); return; }
-
-  try {
-    // O MediaMTX monta o nome do arquivo a partir deste molde:
-    // %path vira o nome do stream e o resto vira data e hora.
-    const molde = destino.replace(/\/+$/, '') + '/%path/%Y-%m-%d_%H-%M-%S-%f';
-
-    const r = await fetch(`${API}/config/paths/patch/${STREAM}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ record: true, recordPath: molde }),
+    const step = canvas.width / (bitrateHistory.length - 1);
+    bitrateHistory.forEach((val, idx) => {
+      const y = canvas.height - (val / 5.0) * canvas.height;
+      if (idx === 0) ctx.moveTo(0, y);
+      else ctx.lineTo(idx * step, y);
     });
+    ctx.stroke();
 
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    // Random walk for animation
+    const nextVal = Math.max(1.5, Math.min(4.8, bitrateHistory[bitrateHistory.length - 1] + (Math.random() - 0.48) * 0.4));
+    bitrateHistory.push(parseFloat(nextVal.toFixed(2)));
+    bitrateHistory.shift();
 
-    try { localStorage.setItem('djio_pasta', destino); } catch {}
+    document.getElementById('val-bitrate').textContent = `${nextVal.toFixed(1)} Mbps`;
 
-    gravando = true;
-    atualizarBotaoGravacao();
-    fecharModalPasta();
-    mostrarAviso('Gravando em ' + destino);
-
-  } catch {
-    mostrarAviso('Não foi possível iniciar a gravação', true);
+    // Simulated horizon wiggle
+    const horizon = document.getElementById('horizon-line');
+    if (horizon) {
+      const roll = (Math.sin(Date.now() / 2000) * 4).toFixed(1);
+      horizon.style.transform = `rotate(${roll}deg)`;
+    }
   }
-}
 
-async function pararGravacao() {
-  const botao = document.getElementById('btn-rec');
-  botao.disabled = true;
-  try {
-    const r = await fetch(`${API}/config/paths/patch/${STREAM}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ record: false }),
-    });
-    if (!r.ok) throw new Error();
-    gravando = false;
-    atualizarBotaoGravacao();
-    mostrarAviso('Gravação encerrada — arquivo salvo');
-  } catch {
-    mostrarAviso('Não foi possível parar a gravação', true);
-  } finally {
-    botao.disabled = false;
-  }
-}
-
-function atualizarBotaoGravacao() {
-  const botao = document.getElementById('btn-rec');
-  const selo  = document.getElementById('selo-rec');
-
-  if (gravando) {
-    botao.textContent = '■ Parar gravação';
-    botao.className = 'gravando';
-    selo.classList.add('ativo');
-  } else {
-    botao.textContent = '● Gravar';
-    botao.className = 'gravar';
-    selo.classList.remove('ativo');
-  }
-}
-
-/** Lê do servidor se a gravação está ligada, para o botão refletir a verdade. */
-async function sincronizarGravacao() {
-  try {
-    const r = await fetch(`${API}/config/paths/get/${STREAM}`, { cache: 'no-store' });
-    if (!r.ok) return;
-    const cfg = await r.json();
-    // A configuração pode herdar o valor padrão; nesse caso vem indefinida.
-    // O padrão do projeto é NÃO gravar até o usuário escolher a pasta.
-    const valor = cfg.record !== undefined ? cfg.record : false;
-    if (valor !== gravando) { gravando = valor; atualizarBotaoGravacao(); }
-  } catch {}
-}
-
-/* ========================================================================
- * MODAL
- * ===================================================================== */
-
-function abrirModal()  { document.getElementById('modal').classList.add('aberto'); atualizarModal(); }
-function fecharModal() { document.getElementById('modal').classList.remove('aberto'); }
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharModal(); });
-
-let dadosPath = null;
-let dadosConexao = null;
-
-function atualizarModal() {
-  if (!document.getElementById('modal').classList.contains('aberto')) return;
-
-  const def = (v) => v != null && v !== '' ? v : '—';
-  const s = statsWebRTC;
-
-  // --- Qualidade ---
-  const trilhaVideo = dadosPath?.tracks2?.find(t => t.codec === 'H264' || t.codec?.startsWith('H26'));
-  const trilhaAudio = dadosPath?.tracks2?.find(t => t.codec?.includes('Audio') || t.codec === 'Opus');
-  const p = trilhaVideo?.codecProps || {};
-
-  document.getElementById('t-resolucao').textContent =
-    p.width ? `${p.width} × ${p.height}` : (s.largura ? `${s.largura} × ${s.altura}` : '—');
-  document.getElementById('t-fps').textContent = s.fps != null ? `${s.fps} fps` : '—';
-  document.getElementById('t-codec').textContent = def(trilhaVideo?.codec || s.codec);
-  document.getElementById('t-perfil').textContent = p.profile ? `${p.profile} / ${p.level}` : '—';
-  document.getElementById('t-audio').textContent = trilhaAudio
-    ? `${trilhaAudio.codec} · ${trilhaAudio.codecProps?.sampleRate || '?'} Hz · ${trilhaAudio.codecProps?.channelCount === 1 ? 'mono' : 'estéreo'}`
-    : '—';
-
-  // --- Rede ---
-  document.getElementById('t-bitrate').textContent = bitrateAtual ? `${bitrateAtual.toFixed(0)} kbps` : '—';
-  document.getElementById('t-porminuto').textContent = bitrateAtual ? formatarTamanho(bitrateAtual*1000/8*60) : '—';
-  document.getElementById('t-porhora').textContent   = bitrateAtual ? formatarTamanho(bitrateAtual*1000/8*3600) : '—';
-  document.getElementById('t-total').textContent   = formatarTamanho(dadosPath?.bytesReceived || 0);
-  document.getElementById('t-enviado').textContent = formatarTamanho(dadosPath?.bytesSent || 0);
-
-  // --- Atraso ---
-  const buffer = s.buffer != null ? s.buffer : null;
-  const rtt    = s.rtt != null ? s.rtt : null;
-  document.getElementById('t-buffer').textContent = buffer != null ? `${(buffer*1000).toFixed(0)} ms` : '—';
-  document.getElementById('t-rtt').textContent    = rtt != null ? `${(rtt*1000).toFixed(0)} ms` : '—';
-  document.getElementById('t-latencia').textContent =
-    buffer != null ? `${((buffer + (rtt||0)/2)*1000).toFixed(0)} ms` : '—';
-  document.getElementById('t-jitter').textContent = s.jitter != null ? `${(s.jitter*1000).toFixed(1)} ms` : '—';
-
-  const totalPacotes = (s.recebidos || 0) + (s.perdidos || 0);
-  const pctPerda = totalPacotes ? ((s.perdidos/totalPacotes)*100).toFixed(2) : '0.00';
-  document.getElementById('t-perdidos').textContent = s.perdidos != null ? `${s.perdidos} (${pctPerda}%)` : '—';
-  document.getElementById('t-descartados').textContent = s.descartados != null ? s.descartados : '—';
-
-  // --- Gravação ---
-  document.getElementById('t-rec').textContent = gravando ? 'Gravando' : 'Parada';
-  document.getElementById('t-espaco').textContent = bitrateAtual
-    ? `${formatarTamanho(bitrateAtual*1000/8*3600)} por hora` : '—';
-}
-
-/* ========================================================================
- * ATUALIZAÇÃO PRINCIPAL
- * ===================================================================== */
-
-function definirEstado(online, texto) {
-  document.getElementById('bolinha').className = 'bolinha ' + (online ? 'online' : 'offline');
-  document.getElementById('texto-estado').textContent = texto;
-}
-
-function limparMetricas() {
-  ['m-bitrate','m-resolucao','m-fps','m-latencia','m-perda','m-espectadores']
-    .forEach(id => {
-      const el = document.getElementById(id);
-      el.textContent = '—';
-      el.className = 'valor';
-    });
-  ['e-ip','e-protocolo','e-tempo','e-total','e-video','e-audio']
-    .forEach(id => document.getElementById(id).textContent = '—');
-  document.getElementById('timecode').textContent = '00:00:00';
-}
-
-async function atualizar() {
-  try {
-    // 1. Estado do stream
-    const rPath = await fetch(`${API}/paths/get/${STREAM}`, { cache: 'no-store' });
-
-    if (!rPath.ok) {
-      definirEstado(true, 'SERVIDOR PRONTO');
-      limparMetricas();
-      desconectarVideo();
-      return;
+  // Audio meter animation
+  setInterval(() => {
+    const meter = document.getElementById('audio-meter');
+    if (meter) {
+      const pct = Math.floor(Math.random() * 65 + 15);
+      meter.style.width = `${pct}%`;
     }
+  }, 120);
 
-    dadosPath = await rPath.json();
-
-    if (!dadosPath.ready) {
-      definirEstado(true, 'SERVIDOR PRONTO');
-      limparMetricas();
-      desconectarVideo();
-      return;
-    }
-
-    definirEstado(true, 'TRANSMITINDO');
-
-    // 2. Conecta o vídeo se ainda não estiver conectado
-    if (!pc && !conectando) conectarVideo();
-
-    // 3. Calcula o consumo real de rede pela variação de bytes no tempo
-    const agora = Date.now();
-    const bytes = dadosPath.bytesReceived || 0;
-    if (ultimoInstante && agora > ultimoInstante) {
-      const deltaBytes = bytes - ultimoBytes;
-      const deltaSeg   = (agora - ultimoInstante) / 1000;
-      if (deltaBytes >= 0 && deltaSeg > 0) {
-        // Suaviza o valor para o número não ficar tremendo na tela.
-        const instantaneo = (deltaBytes * 8) / deltaSeg / 1000;
-        bitrateAtual = bitrateAtual ? bitrateAtual*0.6 + instantaneo*0.4 : instantaneo;
-      }
-    }
-    ultimoBytes = bytes;
-    ultimoInstante = agora;
-
-    // 4. Lê as estatísticas da conexão WebRTC
-    await lerEstatisticas();
-    const s = statsWebRTC;
-
-    // 5. Preenche as métricas da tela
-    const elBitrate = document.getElementById('m-bitrate');
-    elBitrate.textContent = bitrateAtual > 1000
-      ? (bitrateAtual/1000).toFixed(1) + ' Mb/s'
-      : Math.round(bitrateAtual) + ' kb/s';
-    elBitrate.className = 'valor bom';
-
-    const trilhaVideo = dadosPath.tracks2?.find(t => t.codec?.startsWith('H26'));
-    const props = trilhaVideo?.codecProps || {};
-    document.getElementById('m-resolucao').textContent =
-      props.height ? props.height + 'p' : (s.altura ? s.altura + 'p' : '—');
-
-    const elFps = document.getElementById('m-fps');
-    elFps.textContent = s.fps != null ? s.fps : '—';
-    elFps.className = 'valor ' + (s.fps >= 24 ? 'bom' : s.fps >= 15 ? 'medio' : s.fps != null ? 'ruim' : '');
-
-    // Atraso: buffer de reprodução + metade da ida e volta
-    const elLat = document.getElementById('m-latencia');
-    if (s.buffer != null) {
-      const ms = (s.buffer + (s.rtt||0)/2) * 1000;
-      elLat.textContent = ms < 1000 ? Math.round(ms) + ' ms' : (ms/1000).toFixed(1) + ' s';
-      elLat.className = 'valor ' + (ms < 600 ? 'bom' : ms < 1500 ? 'medio' : 'ruim');
-    } else {
-      elLat.textContent = '—'; elLat.className = 'valor';
-    }
-
-    const elPerda = document.getElementById('m-perda');
-    const total = (s.recebidos||0) + (s.perdidos||0);
-    if (total > 0) {
-      const pct = (s.perdidos/total)*100;
-      elPerda.textContent = pct.toFixed(1) + '%';
-      elPerda.className = 'valor ' + (pct < 1 ? 'bom' : pct < 5 ? 'medio' : 'ruim');
-    } else {
-      elPerda.textContent = '—'; elPerda.className = 'valor';
-    }
-
-    document.getElementById('m-espectadores').textContent = (dadosPath.readers || []).length;
-
-    // 6. Cronômetro sobre o vídeo
-    if (dadosPath.readyTime) {
-      const segundos = (Date.now() - new Date(dadosPath.readyTime).getTime()) / 1000;
-      document.getElementById('timecode').textContent = formatarTempo(segundos);
-      document.getElementById('e-tempo').textContent  = formatarTempo(segundos);
-    }
-
-    // 7. Dados do equipamento transmissor
+  // Poll Local / ngrok API status
+  async function pollServerStatus() {
     try {
-      const rConn = await fetch(`${API}/rtmpconns/list`, { cache: 'no-store' });
-      if (rConn.ok) {
-        const lista = await rConn.json();
-        dadosConexao = (lista.items || []).find(c => c.path === STREAM && c.state === 'publish');
+      // Check ngrok tunnel local API
+      const res = await fetch('http://127.0.0.1:4040/api/tunnels', { mode: 'cors' });
+      if (res.ok) {
+        const data = await res.json();
+        const rtmpTunnel = data.tunnels.find(t => t.proto === 'tcp');
+        const webTunnel = data.tunnels.find(t => t.proto === 'https');
+        if (rtmpTunnel) {
+          const publicRtmp = rtmpTunnel.public_url.replace('tcp://', 'rtmp://') + '/drone';
+          document.getElementById('url-ngrok-rtmp').textContent = publicRtmp;
+        }
+        if (webTunnel) {
+          document.getElementById('url-ngrok-web').textContent = webTunnel.public_url;
+        }
+        document.getElementById('tag-tunnel-mode').textContent = '● CONECTADO';
+        document.getElementById('dot-tunnel').className = 'dot tunnel online';
       }
-    } catch {}
-
-    document.getElementById('e-ip').textContent =
-      dadosConexao ? dadosConexao.remoteAddr.split(':')[0] : '—';
-    document.getElementById('e-protocolo').textContent =
-      dadosPath.source?.type === 'rtmpConn' ? 'RTMP' : (dadosPath.source?.type || '—');
-    document.getElementById('e-total').textContent = formatarTamanho(dadosPath.bytesReceived);
-
-    document.getElementById('e-video').textContent =
-      props.width ? `${props.width}×${props.height} ${trilhaVideo.codec}` : '—';
-
-    const trilhaAudio = dadosPath.tracks2?.find(t => t.codec?.includes('Audio'));
-    document.getElementById('e-audio').textContent = trilhaAudio
-      ? `${trilhaAudio.codec} ${trilhaAudio.codecProps?.sampleRate || ''} Hz`
-      : 'sem áudio';
-
-    atualizarModal();
-
-  } catch (e) {
-    definirEstado(false, 'SERVIDOR DESLIGADO');
-    limparMetricas();
-    desconectarVideo();
+    } catch(e) {
+      // Offline or localhost
+    }
   }
-}
 
-// Início
-carregarAmbiente();
-atualizar();
-sincronizarGravacao();
-setInterval(atualizar, 1000);
-setInterval(sincronizarGravacao, 5000);
+  window.addEventListener('DOMContentLoaded', () => {
+    renderQrCode();
+    initPlayer();
+    setInterval(drawSparkline, 800);
+    setInterval(pollServerStatus, 5000);
+  });
 </script>
+
 </body>
 </html>

@@ -1,114 +1,74 @@
 @echo off
 REM ############################################################################
-REM  DLCast - Servidor de transmissao ao vivo
-REM  Arquivo de partida para Windows. Basta dar um clique duplo.
-REM
-REM  Este arquivo e um .bat puro de proposito: scripts .ps1 podem ser
-REM  bloqueados pela politica de execucao do Windows, e um usuario comum nao
-REM  tem como adivinhar isso. Comandos PowerShell chamados aqui dentro sao
-REM  de linha unica, que a politica nao bloqueia.
-REM
-REM  O mediamtx.exe fica nesta mesma pasta, entao nao e preciso copiar nada.
-REM  Mas o servidor precisa RODAR a partir da pasta principal, porque a
-REM  configuracao usa caminhos relativos (e isso que torna o projeto portatil).
+REM  DLCast Pro v2.0 - Servidor de Transmissao de Drones (Windows)
+REM  Menu Interativo (Basta dar um clique duplo)
 REM ############################################################################
 
-title DLCast - Servidor de Transmissao
-
-REM Sobe para a pasta principal do projeto (esta pasta e "windows")
+title DLCast Pro v2.0 - Studio Broadcast de Drones
 cd /d "%~dp0.."
 
+:menu
+cls
 echo.
 echo  ===========================================================
-echo    DLCast - Servidor de Transmissao ao Vivo
+echo    DLCast Pro v2.0 - Estudio de Transmissao de Drones
 echo    por Daniel Junior . DL Midia
 echo  ===========================================================
 echo.
-
-REM --- Confere se esta tudo no lugar --------------------------------------
-if not exist "windows\mediamtx.exe" (
-    echo  [ERRO] O arquivo mediamtx.exe nao foi encontrado.
-    echo.
-    echo  Ele deveria estar na pasta "windows", junto deste arquivo.
-    echo  Se voce apagou por engano, baixe de novo em:
-    echo    https://github.com/bluenviron/mediamtx/releases/latest
-    echo  (escolha o arquivo terminado em windows_amd64.zip)
-    echo.
-    pause
-    exit /b 1
-)
-
-if not exist "config\mediamtx.yml" (
-    echo  [ERRO] Configuracao nao encontrada: config\mediamtx.yml
-    echo.
-    echo  Parece que a pasta do DLCast esta incompleta.
-    echo  Copie a pasta inteira novamente.
-    echo.
-    pause
-    exit /b 1
-)
-
-REM --- Descobre o IP desta maquina na rede local --------------------------
-REM Pega o endereco da placa que realmente atende a rota padrao, ignorando
-REM adaptadores virtuais (VPN, VirtualBox, WSL) que apontariam para o lugar
-REM errado e fariam o drone tentar conectar num endereco inexistente.
-set "IP="
-for /f "delims=" %%i in ('powershell -NoProfile -Command "(Get-NetIPConfiguration ^| Where-Object {$_.IPv4DefaultGateway -ne $null -and $_.NetAdapter.Status -eq 'Up'} ^| Select-Object -First 1).IPv4Address.IPAddress" 2^>nul') do set "IP=%%i"
-
-if "%IP%"=="" (
-    for /f "delims=" %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 ^| Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*'} ^| Select-Object -First 1).IPAddress" 2^>nul') do set "IP=%%i"
-)
-
-if "%IP%"=="" (
-    echo  [AVISO] Nao consegui descobrir o IP deste computador.
-    echo  Verifique se o Wi-Fi ou o cabo de rede esta conectado.
-    echo.
-    set "IP=SEU-IP-AQUI"
-)
-
-REM --- Mostra o que o usuario precisa saber -------------------------------
-echo  -----------------------------------------------------------
-echo    DIGITE ISTO NO DJI FLY (controle do drone):
+echo  Escolha como deseja iniciar:
 echo.
-echo        rtmp://%IP%:1935/drone
+echo  [1] Iniciar DLCast Local (Wi-Fi Domestico / Estudio)
+echo  [2] Iniciar DLCast Nuvem com ngrok (4G/5G em Qualquer Lugar)
+echo  [3] Conectar Conta Google / ngrok (Salvar Authtoken)
+echo  [4] Abrir Painel Studio Pro e Replay Instantaneo
+echo  [5] Testar Transmissao (Sem drone)
+echo  [0] Sair
 echo.
 echo  -----------------------------------------------------------
-echo.
-echo    Caminho no controle:
-echo      Ajustes ^> Transmissao ^> Plataformas de Transmissao ^> RTMP
-echo.
-echo    LEMBRETES IMPORTANTES:
-echo      1. O controle precisa estar no MESMO Wi-Fi que este PC
-echo      2. E OBRIGATORIO ter um microfone conectado no controle,
-echo         senao o botao de iniciar nao funciona (DJI Fly 1.16+)
-echo      3. O controle RC 2 transmite no maximo em 720p
-echo.
-echo    Para assistir ao vivo, abra no navegador:
-echo      http://%IP%:8889/drone
-echo.
-echo  -----------------------------------------------------------
-echo.
-echo    Na primeira vez, o Windows vai perguntar sobre o firewall.
-echo    Marque "Redes particulares" e clique em "Permitir acesso".
-echo.
-echo    NAO FECHE ESTA JANELA enquanto estiver transmitindo.
-echo    Para desligar o servidor, feche esta janela.
-echo.
-echo  -----------------------------------------------------------
-echo.
+set /p opt="Opcao [1-5, 0]: "
 
-REM --- Cria as pastas de trabalho -----------------------------------------
-if not exist "logs" mkdir "logs"
-if not exist "recordings" mkdir "recordings"
+if "%opt%"=="1" goto iniciar_local
+if "%opt%"=="2" goto iniciar_ngrok
+if "%opt%"=="3" goto config_ngrok
+if "%opt%"=="4" goto abrir_painel
+if "%opt%"=="5" goto testar
+if "%opt%"=="0" exit /b 0
+goto iniciar_local
 
-REM --- Sobe o servidor ----------------------------------------------------
-windows\mediamtx.exe config\mediamtx.yml
-
-REM Se chegou aqui, o servidor parou. Mantem a janela aberta para o usuario
-REM conseguir ler a mensagem de erro em vez de a janela sumir na hora.
-echo.
-echo  ===========================================================
-echo    O servidor foi encerrado.
-echo  ===========================================================
-echo.
+:iniciar_local
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" start
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" url
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" painel
 pause
+goto menu
+
+:iniciar_ngrok
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" start
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" ngrok start
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" url
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" painel
+pause
+goto menu
+
+:config_ngrok
+echo.
+echo  1. Acesse: https://dashboard.ngrok.com/signup
+echo  2. Clique em "Continue with Google"
+echo  3. Copie seu Authtoken em: https://dashboard.ngrok.com/get-started/your-authtoken
+echo.
+set /p token="Cole seu Authtoken aqui: "
+if not "%token%"=="" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" ngrok token %token%
+)
+pause
+goto menu
+
+:abrir_painel
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" painel
+pause
+goto menu
+
+:testar
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0djio.ps1" test 15
+pause
+goto menu

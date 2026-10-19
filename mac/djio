@@ -211,6 +211,13 @@ cmd_stop() {
     rm -f logs/painel.pid
   fi
 
+  # Encerra tambem o tunel ngrok se estiver no ar
+  if pgrep -f "ngrok start" >/dev/null 2>&1 || [ -f logs/ngrok.pid ]; then
+    pkill -f "ngrok start" 2>/dev/null || kill "$(cat logs/ngrok.pid)" 2>/dev/null
+    rm -f logs/ngrok.pid
+    ok "Túnel ngrok encerrado."
+  fi
+
   if ! esta_rodando; then
     aviso "O servidor ja estava parado."
     return 0
@@ -239,35 +246,56 @@ cmd_stop() {
 # COMANDO: url
 #
 # Mostra, em letras grandes, exatamente o que deve ser digitado na tela do
-# controle DJI. E o comando que voce mais vai usar em campo.
+# controle DJI. Suporta tanto rede local quanto a nuvem ngrok.
 ###############################################################################
 cmd_url() {
   local ip
   ip="$(detectar_ip)"
 
-  if [ -z "$ip" ]; then
-    erro "Nao consegui detectar o IP do seu Mac."
-    aviso "Verifique se o Wi-Fi ou o cabo de rede esta conectado."
-    return 1
+  titulo "ENDEREÇOS RTMP PARA TRANSMISSÃO DE DRONES"
+
+  if [ -n "$ip" ]; then
+    echo
+    echo "  ${NEG}1. REDE LOCAL WI-FI (Mesma rede que este Mac):${FIM}"
+    echo "     ${NEG}${VERDE}rtmp://${ip}:${RTMP_PORT}/${STREAM_PADRAO}${FIM}"
   fi
 
-  titulo "DIGITE ISTO NO DJI FLY (controle RC 2)"
+  # Confere se o túnel ngrok está ativo
+  if curl -s --max-time 1 http://127.0.0.1:4040/api/tunnels >/dev/null 2>&1; then
+    local rtmp_tunnel
+    rtmp_tunnel="$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -o 'tcp://[^"]*' | head -n1 | sed 's/tcp:\/\//rtmp:\/\//')"
+    local web_tunnel
+    web_tunnel="$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -o 'https://[^"]*' | head -n1)"
+
+    if [ -n "$rtmp_tunnel" ]; then
+      echo
+      echo "  ${NEG}${AZUL}2. NUVEM GLOBAL NGROK (4G/5G / QUALQUER LUGAR DO MUNDO):${FIM}"
+      echo "     ${NEG}${VERDE}${rtmp_tunnel}/${STREAM_PADRAO}${FIM}"
+      echo "     ${AMAR}* Digite este endereço no DJI Fly se o drone estiver em campo!${FIM}"
+    fi
+
+    if [ -n "$web_tunnel" ]; then
+      echo
+      echo "  ${NEG}PAINEL REMOTO PARA CLIENTES (HTTPS):${FIM}"
+      echo "     ${AZUL}${web_tunnel}/painel.html${FIM}"
+    fi
+  else
+    echo
+    echo "  ${AZUL}[i] Dica: Quer transmitir pelo 4G/5G do drone em qualquer lugar?${FIM}"
+    echo "      Inicie o túnel ngrok com: ./mac/djio ngrok start"
+  fi
+
   echo
-  echo "  ${NEG}${VERDE}rtmp://${ip}:${RTMP_PORT}/${STREAM_PADRAO}${FIM}"
-  echo
-  echo "  Caminho no controle:"
+  echo "  Caminho no controle DJI Fly:"
   echo "    Ajustes > Transmissao > Plataformas de Transmissao > RTMP"
   echo
-  echo "  ${AMAR}LEMBRETES IMPORTANTES DO RC 2:${FIM}"
-  echo "    1. O controle precisa estar no MESMO Wi-Fi que este Mac."
-  echo "    2. A partir do DJI Fly v1.16.0 e obrigatorio ter um MICROFONE"
-  echo "       conectado ao controle, senao o botao de iniciar nao funciona."
-  echo "    3. O RC 2 transmite no maximo em 720p (limite do hardware dele)."
+  echo "  ${AMAR}LEMBRETE IMPORTANTE:${FIM}"
+  echo "    No DJI Fly v1.16.0+, conecte um microfone USB-C ao controle."
   echo
-  echo "  ${NEG}Para assistir depois de iniciar:${FIM}"
-  echo "    Navegador (rapido) : http://${ip}:${WEBRTC_PORT}/${STREAM_PADRAO}"
-  echo "    Navegador (compat) : http://${ip}:${HLS_PORT}/${STREAM_PADRAO}"
-  echo "    OBS / VLC          : rtsp://${ip}:${RTSP_PORT}/${STREAM_PADRAO}"
+  echo "  ${NEG}Para assistir no seu computador:${FIM}"
+  echo "    Painel Studio Pro  : http://${ip:-127.0.0.1}:${PAINEL_PORT}/painel.html"
+  echo "    WebRTC (<300ms)    : http://${ip:-127.0.0.1}:${WEBRTC_PORT}/${STREAM_PADRAO}"
+  echo "    OBS / vMix         : rtsp://${ip:-127.0.0.1}:${RTSP_PORT}/${STREAM_PADRAO}"
   echo
 }
 
@@ -509,6 +537,145 @@ cmd_painel() {
   echo
 
   open "$url" 2>/dev/null || aviso "Abra manualmente o endereco acima."
+}
+
+###############################################################################
+# COMANDO: ngrok
+#
+# Gerencia a conexao em nuvem via ngrok para permitir transmissoes de drones
+# remotamente (via rede de celular 4G/5G) sem abrir portas no roteador.
+###############################################################################
+cmd_ngrok() {
+  local sub="${1:-status}"
+  shift 2>/dev/null || true
+
+  case "$sub" in
+    start|ligar)
+      titulo "INICIANDO TÚNEL DE TRANSMISSÃO GLOBAL (NGROK)"
+
+      if ! command -v ngrok >/dev/null 2>&1; then
+        erro "O comando 'ngrok' não está instalado."
+        echo
+        echo "  COMO INSTALAR NO MAC (copie e cole no Terminal):"
+        echo "      brew install ngrok"
+        echo
+        echo "  Depois faça login gratuito com sua Conta Google em:"
+        echo "      https://dashboard.ngrok.com/signup"
+        echo
+        echo "  E adicione seu token:"
+        echo "      ./mac/djio ngrok token SEU_TOKEN"
+        return 1
+      fi
+
+      if pgrep -f "ngrok start" >/dev/null 2>&1; then
+        aviso "O túnel ngrok JÁ está rodando."
+        cmd_ngrok status
+        return 0
+      fi
+
+      # Confere se mediamtx está rodando
+      if ! esta_rodando; then
+        info "Iniciando servidor DLCast primeiro..."
+        cmd_start
+      fi
+
+      mkdir -p logs
+      info "Iniciando túneis TCP (RTMP:1935) e HTTP (Painel:8080)..."
+
+      cat << 'EOF' > logs/ngrok_run.yml
+version: "2"
+tunnels:
+  rtmp:
+    proto: tcp
+    addr: 1935
+  painel:
+    proto: http
+    addr: 8080
+EOF
+
+      nohup ngrok start --all --config logs/ngrok_run.yml > logs/ngrok.log 2>&1 &
+      echo $! > logs/ngrok.pid
+
+      local tentativas=0
+      local pronto=0
+      while [ $tentativas -lt 25 ]; do
+        if curl -s --max-time 1 http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -q "public_url"; then
+          pronto=1
+          break
+        fi
+        tentativas=$((tentativas + 1))
+        perl -e 'select(undef,undef,undef,0.3)' 2>/dev/null || sleep 1
+      done
+
+      if [ $pronto -eq 1 ]; then
+        ok "Túnel ngrok iniciado com sucesso!"
+        echo
+        cmd_ngrok status
+      else
+        erro "O ngrok não respondeu no tempo esperado."
+        echo "  Verifique o log em: logs/ngrok.log"
+        echo "  Possível causa: Authtoken não configurado."
+        echo "  Execute: ./mac/djio ngrok token SEU_TOKEN"
+        echo "  (Obtenha seu token com login Google em https://dashboard.ngrok.com/signup)"
+      fi
+      ;;
+
+    stop|parar)
+      titulo "PARANDO TÚNEL NGROK"
+      if pgrep -f "ngrok start" >/dev/null 2>&1 || [ -f logs/ngrok.pid ]; then
+        pkill -f "ngrok start" 2>/dev/null || kill "$(cat logs/ngrok.pid)" 2>/dev/null
+        rm -f logs/ngrok.pid
+        ok "Túnel ngrok desligado."
+      else
+        aviso "Nenhum túnel ngrok estava rodando."
+      fi
+      ;;
+
+    token|auth)
+      local token="${1:-}"
+      if [ -z "$token" ]; then
+        erro "Informe seu authtoken."
+        echo "  Exemplo: ./mac/djio ngrok token 2xAbcDeFg..."
+        echo "  Pegue seu token em: https://dashboard.ngrok.com/get-started/your-authtoken"
+        return 1
+      fi
+      if command -v ngrok >/dev/null 2>&1; then
+        ngrok config add-authtoken "$token"
+        ok "Token ngrok salvo com sucesso!"
+      else
+        erro "ngrok nao instalado. Instale com: brew install ngrok"
+      fi
+      ;;
+
+    status)
+      if curl -s --max-time 2 http://127.0.0.1:4040/api/tunnels >/dev/null 2>&1; then
+        local rtmp_tunnel
+        rtmp_tunnel="$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -o 'tcp://[^"]*' | head -n1 | sed 's/tcp:\/\//rtmp:\/\//')"
+        local web_tunnel
+        web_tunnel="$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -o 'https://[^"]*' | head -n1)"
+
+        echo "  ${NEG}${VERDE}TÚNEL NGROK ATIVO E CONECTADO:${FIM}"
+        echo
+        echo "  ${NEG}Endereço RTMP para o Drone (4G/5G / Mundo Inteiro):${FIM}"
+        echo "    ${NEG}${VERDE}${rtmp_tunnel}/${STREAM_PADRAO}${FIM}"
+        echo
+        echo "  ${NEG}Painel Studio Remoto (HTTPS / Clientes):${FIM}"
+        echo "    ${AZUL}${web_tunnel}/painel.html${FIM}"
+        echo
+      else
+        aviso "Túnel ngrok não está em execução."
+        info "Para ligar, execute: ./mac/djio ngrok start"
+      fi
+      ;;
+
+    *)
+      echo "  Uso do comando ngrok:"
+      echo "    ./mac/djio ngrok start      -> Inicia o túnel de nuvem"
+      echo "    ./mac/djio ngrok stop       -> Encerra o túnel"
+      echo "    ./mac/djio ngrok status     -> Mostra os endereços públicos ativos"
+      echo "    ./mac/djio ngrok token <t>  -> Salva seu authtoken"
+      ;;
+  esac
 }
 
 ###############################################################################
@@ -1005,7 +1172,14 @@ ${NEG}OPERACAO DIARIA${FIM}
     ${VERDE}url${FIM}                Mostra o endereco para digitar no DJI Fly
     ${VERDE}status${FIM}             Mostra quem esta transmitindo agora
     ${VERDE}watch${FIM} [stream]     Abre o video no navegador
-    ${VERDE}painel${FIM}             Abre o painel de controle visual
+    ${VERDE}painel${FIM}             Abre o painel Studio Pro & Replay Instantâneo
+    ${VERDE}replay${FIM}             Abre direto o console de Replay
+
+${NEG}NUVEM GLOBAL (TRANSMISSÃO VIA 4G/5G / STARLINK)${FIM}
+    ${VERDE}ngrok start${FIM}        Inicia túnel mundial (sem abrir portas)
+    ${VERDE}ngrok stop${FIM}         Desliga o túnel
+    ${VERDE}ngrok status${FIM}       Exibe endereço RTMP público mundial
+    ${VERDE}ngrok token <t>${FIM}    Salva seu token ngrok (após login com Google)
 
 ${NEG}SEM WI-FI NO LOCAL?${FIM}
     ${VERDE}rede${FIM}               Assistente para criar uma rede propria
@@ -1027,7 +1201,7 @@ ${NEG}PROJETO${FIM}
 ${NEG}PRIMEIRA VEZ? SIGA ESTA ORDEM${FIM}
     1. ./mac/djio doctor     (confere se esta tudo instalado)
     2. ./mac/djio start      (liga o servidor)
-    3. ./mac/djio test       (confirma que funciona, sem o drone)
+    3. ./mac/djio ngrok start(ativa link mundial 4G/5G opcional)
     4. ./mac/djio url        (pega o endereco para o controle)
 
 AJUDA
@@ -1048,6 +1222,8 @@ case "$comando" in
   test|teste)         cmd_test "$@" ;;
   watch|assistir)     cmd_watch "$@" ;;
   painel|dashboard)   cmd_painel "$@" ;;
+  replay)             cmd_painel --direto ;;
+  ngrok|tunnel|nuvem) cmd_ngrok "$@" ;;
   restream|repassar)  cmd_restream "$@" ;;
   rede|wifi|hotspot)
     # "rede --verificar" confere se a rede subiu; "rede" abre o assistente.

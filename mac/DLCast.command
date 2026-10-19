@@ -1,65 +1,80 @@
 #!/usr/bin/env bash
 ###############################################################################
-# DLCast - Servidor de transmissao ao vivo
-# Arquivo de partida para macOS. Basta dar um clique duplo no Finder.
-#
-# Um arquivo .command e um script que o Finder sabe abrir no Terminal com
-# clique duplo. E o equivalente do DLCast.bat do Windows: existe para que
-# ninguem precise saber o que e um terminal para usar o projeto.
-#
-# Se o clique duplo nao funcionar na primeira vez, e porque o macOS ainda nao
-# marcou o arquivo como executavel. Rode uma unica vez no Terminal:
-#     chmod +x mac/DLCast.command
+# DLCast Pro v2.0 - Servidor de Transmissão ao Vivo para Drones
+# Menu Interativo para macOS (Clique duplo no Finder)
 ###############################################################################
 
-# Sobe para a pasta principal do projeto (esta pasta e "mac")
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 
-clear
+VERDE=$'\033[0;32m'; AZUL=$'\033[0;36m'; AMAR=$'\033[0;33m'; NEG=$'\033[1m'; FIM=$'\033[0m'
 
-echo
-echo "  ==========================================================="
-echo "    DLCast - Servidor de Transmissao ao Vivo"
-echo "    por Daniel Junior . DL Midia"
-echo "  ==========================================================="
-echo
-
-# --- Confere as dependencias ------------------------------------------------
-if ! command -v mediamtx >/dev/null 2>&1; then
-  echo "  [ERRO] O MediaMTX nao esta instalado."
+menu() {
+  clear
   echo
-  echo "  COMO RESOLVER - copie e cole no Terminal:"
+  echo "  ${AZUL}===========================================================${FIM}"
+  echo "  ${NEG}  DLCast Pro v2.0 - Estúdio de Transmissão de Drones${FIM}"
+  echo "  ${AZUL}===========================================================${FIM}"
+  echo "    por Daniel Junior · DL Mídia"
   echo
-  echo "      brew install mediamtx ffmpeg"
+  echo "  ${NEG}Escolha como deseja iniciar:${FIM}"
   echo
-  echo "  Se o comando 'brew' tambem nao existir, instale o Homebrew"
-  echo "  primeiro, seguindo as instrucoes em https://brew.sh"
+  echo "  ${VERDE}[1]${FIM} ${NEG}Iniciar DLCast Local${FIM} (Wi-Fi Doméstico / Estúdio)"
+  echo "  ${AZUL}[2]${FIM} ${NEG}Iniciar DLCast Nuvem com ngrok${FIM} (4G/5G / Qualquer Lugar do Mundo)"
+  echo "  ${AMAR}[3]${FIM} ${NEG}Conectar Conta Google / ngrok${FIM} (Salvar Authtoken)"
+  echo "  ${VERDE}[4]${FIM} ${NEG}Abrir Painel Studio Pro & Replay Instantâneo${FIM}"
+  echo "  [5] Testar Transmissão (Gerar barras de cores e áudio)"
+  echo "  [6] Diagnóstico do Sistema (Doctor)"
+  echo "  [0] Desligar e Sair"
   echo
-  echo "  Instrucoes completas: abra COMECE-AQUI.html"
+  echo "  -----------------------------------------------------------"
+  read -r -p "  Opção [1-6, 0]: " opt
   echo
-  read -r -p "  Pressione Enter para fechar..."
-  exit 1
-fi
 
-# --- Liga o servidor e o painel ---------------------------------------------
-./mac/djio start
+  case "$opt" in
+    1)
+      ./mac/djio start
+      ./mac/djio url
+      ./mac/djio painel
+      ;;
+    2)
+      ./mac/djio start
+      ./mac/djio ngrok start
+      ./mac/djio url
+      ./mac/djio painel
+      ;;
+    3)
+      echo "  1. Acesse: https://dashboard.ngrok.com/signup"
+      echo "  2. Faça login com sua conta do Google"
+      echo "  3. Copie seu Authtoken em: https://dashboard.ngrok.com/get-started/your-authtoken"
+      echo
+      read -r -p "  Cole seu authtoken aqui: " token
+      if [ -n "$token" ]; then
+        ./mac/djio ngrok token "$token"
+      fi
+      ;;
+    4)
+      ./mac/djio painel --direto
+      ;;
+    5)
+      ./mac/djio test 15
+      ;;
+    6)
+      ./mac/djio doctor
+      ;;
+    0)
+      ./mac/djio stop
+      exit 0
+      ;;
+    *)
+      ./mac/djio start
+      ./mac/djio painel
+      ;;
+  esac
 
-echo
-echo "  -----------------------------------------------------------"
-echo "    Abrindo o painel de controle no navegador..."
-echo "  -----------------------------------------------------------"
-echo
+  echo
+  echo "  -----------------------------------------------------------"
+  read -r -p "  Pressione Enter para voltar ao menu..."
+  menu
+}
 
-./mac/djio painel
-
-echo
-echo "  ==========================================================="
-echo "    O servidor esta rodando em segundo plano."
-echo
-echo "    Voce pode FECHAR esta janela - o servidor continua no ar."
-echo
-echo "    Para desligar depois, de um clique duplo em:"
-echo "        mac/DESLIGAR.command"
-echo "  ==========================================================="
-echo
-read -r -p "  Pressione Enter para fechar esta janela..."
+menu

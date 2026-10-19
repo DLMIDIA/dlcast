@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLCast Pro — Conectar ngrok (Transmissão 4G/5G sem dor de cabeça)</title>
+<style>
+  :root {
+    --bg-base: #080b10;
+    --bg-surface: #0f141d;
+    --bg-card: #151b26;
+    --border: #232c3d;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent-blue: #0284c7;
+    --accent-cyan: #06b6d4;
+    --accent-emerald: #10b981;
+    --accent-purple: #8b5cf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-base); color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6; padding: 30px 20px 80px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 36px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);
+    border: 1px solid rgba(6, 182, 212, 0.3); padding: 5px 14px;
+    border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 12px;
+  }
+  h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+  h1 span { color: var(--accent-cyan); }
+  p.lead { color: var(--text-muted); font-size: 16px; max-width: 620px; margin: 0 auto; }
+
+  .comparison-box {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 30px 0;
+  }
+  @media(max-width: 680px) { .comparison-box { grid-template-columns: 1fr; } }
+  .box-pain {
+    background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px; padding: 20px;
+  }
+  .box-gain {
+    background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 12px; padding: 20px;
+  }
+  .box-title { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
+  .box-pain .box-title { color: #f87171; }
+  .box-gain .box-title { color: var(--accent-emerald); }
+
+  .step-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; margin-bottom: 20px;
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent-cyan); color: #04121f; font-weight: 900;
+    margin-right: 12px; vertical-align: middle;
+  }
+  .step-title { font-size: 18px; font-weight: 800; display: inline-block; vertical-align: middle; }
+
+  .code-block {
+    background: #05070a; border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; font-family: ui-monospace, monospace; font-size: 13px;
+    color: var(--accent-emerald); margin: 12px 0; overflow-x: auto;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .btn-copy {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
+    padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .btn-copy:hover { border-color: var(--accent-cyan); }
+
+  .btn-cta-google {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: #fff; color: #1e293b; padding: 12px 24px;
+    border-radius: 9px; font-weight: 800; text-decoration: none;
+    font-size: 14px; margin: 12px 0; transition: transform .15s;
+    box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+  }
+  .btn-cta-google:hover { transform: translateY(-2px); }
+
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--accent-cyan); text-decoration: none; font-weight: 700;
+    margin-bottom: 24px; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <a href="painel.html" class="btn-back">← Voltar ao Painel Studio</a>
+
+  <header>
+    <div class="badge">NUVEM GLOBAL ZERO-CONFIGURAÇÃO</div>
+    <h1>Transmita Drones pelo <span>ngrok</span></h1>
+    <p class="lead">
+      Sem dor de cabeça de portas de roteador, sem VPS e sem complicação. Faça login com o Google no ngrok e seu drone transmite do meio de um campo aberto direto para o seu computador.
+    </p>
+  </header>
+
+  <div class="comparison-box">
+    <div class="box-pain">
+      <div class="box-title">❌ O jeito antigo e doloroso</div>
+      <ul style="padding-left:18px; font-size:13px; color:var(--text-muted)">
+        <li>Abrir portas no roteador (Port Forwarding 1935)</li>
+        <li>Bloqueado por CGNAT de operadoras de internet</li>
+        <li>Pagar caro por VPS Linux na nuvem todo mês</li>
+        <li>Drone 4G não acha o Mac de casa na rua</li>
+      </ul>
+    </div>
+    <div class="box-gain">
+      <div class="box-title">✅ O jeito DLCast + ngrok</div>
+      <ul style="padding-left:18px; font-size:13px; color:var(--text-muted)">
+        <li>Login com 1 clique usando sua <strong>Conta Google</strong></li>
+        <li>Gera link RTMP mundial seguro instantâneo</li>
+        <li>Funciona em qualquer rede 4G, 5G, Wi-Fi ou Starlink</li>
+        <li>Zero configuração no roteador ou firewall</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Passo 1 -->
+  <div class="step-card">
+    <div>
+      <span class="step-num">1</span>
+      <h2 class="step-title">Criar Conta Gratuita no ngrok com o Google</h2>
+    </div>
+    <p style="margin-top:12px; color:var(--text-muted); font-size:14px">
+      Clique no botão abaixo para abrir a página oficial do ngrok e selecione <strong>"Continue with Google"</strong>:
+    </p>
+    <div>
+      <a href="https://dashboard.ngrok.com/signup" target="_blank" class="btn-cta-google">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.36 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+        Entrar com Conta do Google no ngrok
+      </a>
+    </div>
+  </div>
+
+  <!-- Passo 2 -->
+  <div class="step-card">
+    <div>
+      <span class="step-num">2</span>
+      <h2 class="step-title">Instalar o ngrok</h2>
+    </div>
+    <p style="margin-top:12px; color:var(--text-muted); font-size:14px">
+      No macOS, copie e cole no Terminal:
+    </p>
+    <div class="code-block">
+      <code>brew install ngrok</code>
+      <button class="btn-copy" onclick="copiarComando('brew install ngrok')">Copiar</button>
+    </div>
+    <p style="margin-top:10px; color:var(--text-muted); font-size:13px">
+      No Windows (PowerShell Administrador):
+    </p>
+    <div class="code-block">
+      <code>winget install ngrok.ngrok</code>
+      <button class="btn-copy" onclick="copiarComando('winget install ngrok.ngrok')">Copiar</button>
+    </div>
+  </div>
+
+  <!-- Passo 3 -->
+  <div class="step-card">
+    <div>
+      <span class="step-num">3</span>
+      <h2 class="step-title">Salvar seu Authtoken</h2>
+    </div>
+    <p style="margin-top:12px; color:var(--text-muted); font-size:14px">
+      Depois de logar no ngrok, acesse <a href="https://dashboard.ngrok.com/get-started/your-authtoken" target="_blank" style="color:var(--accent-cyan);font-weight:700">Your Authtoken</a>, copie sua chave e rode uma única vez no Terminal:
+    </p>
+    <div class="code-block">
+      <code>ngrok config add-authtoken SEU_TOKEN_AQUI</code>
+      <button class="btn-copy" onclick="copiarComando('ngrok config add-authtoken SEU_TOKEN_AQUI')">Copiar</button>
+    </div>
+  </div>
+
+  <!-- Passo 4 -->
+  <div class="step-card">
+    <div>
+      <span class="step-num">4</span>
+      <h2 class="step-title">Ligar o DLCast em Modo Nuvem</h2>
+    </div>
+    <p style="margin-top:12px; color:var(--text-muted); font-size:14px">
+      Pronto! Agora basta iniciar o DLCast com suporte a túnel:
+    </p>
+    <div class="code-block">
+      <code>./mac/djio ngrok start</code>
+      <button class="btn-copy" onclick="copiarComando('./mac/djio ngrok start')">Copiar</button>
+    </div>
+    <p style="color:var(--accent-emerald); font-size:13px; font-weight:700; margin-top:10px">
+      ✨ O DLCast vai exibir seu endereço RTMP público mundial para você digitar no controle DJI Fly ou DJI Pilot 2!
+    </p>
+  </div>
+
+</div>
+
+<script>
+  function copiarComando(cmd) {
+    navigator.clipboard.writeText(cmd).then(() => {
+      alert('Comando copiado!');
+    });
+  }
+</script>
+
+</body>
+</html>

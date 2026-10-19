@@ -1,0 +1,18 @@
+version: "2"
+# Authtoken ngrok - Obtenha gratuitamente fazendo login com sua conta Google em:
+# https://dashboard.ngrok.com/get-started/your-authtoken
+authtoken: ""
+
+tunnels:
+  # Túnel TCP para entrada RTMP de drones (porta 1935)
+  # Gera endereço público do tipo: tcp://0.tcp.ngrok.io:XXXXX
+  # No drone digite: rtmp://0.tcp.ngrok.io:XXXXX/drone
+  rtmp:
+    proto: tcp
+    addr: 1935
+
+  # Túnel HTTPS para o Painel de Controle e Monitoramento (porta 8080)
+  # Gera endereço público seguro: https://xxxx.ngrok-free.app
+  painel:
+    proto: http
+    addr: 8080

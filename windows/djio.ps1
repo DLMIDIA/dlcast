@@ -617,13 +617,83 @@ function Comando-Ajuda {
     Write-Host "USO" -ForegroundColor White
     Write-Host "    .\windows\djio.ps1 <comando>"
     Write-Host ""
+################################################################################
+# COMANDO: ngrok
+################################################################################
+function Comando-Ngrok {
+    param([string]$Sub = "status", [string]$Param = "")
+    switch ($Sub.ToLower()) {
+        "start" {
+            Escrever-Titulo "INICIANDO TUNEL NGROK (NUVEM GLOBAL)"
+            if (-not (Get-Command ngrok -ErrorAction SilentlyContinue)) {
+                Escrever-Erro "ngrok nao esta instalado."
+                Write-Host "Instale via PowerShell: winget install ngrok.ngrok"
+                return
+            }
+            if (-not (Servidor-Rodando)) { Comando-Start }
+            
+            $ngrokConfig = @"
+version: "2"
+tunnels:
+  rtmp:
+    proto: tcp
+    addr: 1935
+  painel:
+    proto: http
+    addr: 8080
+"@
+            if (-not (Test-Path "logs")) { New-Item -ItemType Directory -Path "logs" | Out-Null }
+            Set-Content -Path "logs\ngrok_run.yml" -Value $ngrokConfig
+            Start-Process -FilePath "ngrok" -ArgumentList "start --all --config logs\ngrok_run.yml" -WindowStyle Hidden
+            Start-Sleep -Seconds 3
+            Comando-Ngrok "status"
+        }
+        "stop" {
+            Stop-Process -Name "ngrok" -ErrorAction SilentlyContinue
+            Escrever-Ok "Tunel ngrok encerrado."
+        }
+        "token" {
+            if ($Param) {
+                & ngrok config add-authtoken $Param
+                Escrever-Ok "Authtoken salvo com sucesso."
+            } else {
+                Escrever-Erro "Informe o token: .\windows\djio.ps1 ngrok token <seu-token>"
+            }
+        }
+        default {
+            try {
+                $res = Invoke-RestMethod -Uri "http://127.0.0.1:4040/api/tunnels" -ErrorAction Stop
+                $rtmp = ($res.tunnels | Where-Object { $_.proto -eq 'tcp' }).public_url -replace 'tcp://', 'rtmp://'
+                $web = ($res.tunnels | Where-Object { $_.proto -eq 'https' }).public_url
+                Escrever-Titulo "TUNEL NGROK CONECTADO"
+                Write-Host "  RTMP Drone: $rtmp/drone" -ForegroundColor Green
+                Write-Host "  Painel Web: $web/painel.html" -ForegroundColor Cyan
+            } catch {
+                Escrever-Aviso "Tunel ngrok nao esta ativo. Inicie com: .\windows\djio.ps1 ngrok start"
+            }
+        }
+    }
+}
+
+function Comando-Ajuda {
+    Escrever-Titulo "DJIO - Servidor de Transmissao de Drones (Windows)"
+    Write-Host ""
+    Write-Host "USO: .\windows\djio.ps1 <comando> [opcoes]"
+    Write-Host ""
     Write-Host "OPERACAO DIARIA" -ForegroundColor White
     Write-Host "    start            Liga o servidor"
     Write-Host "    stop             Desliga o servidor"
     Write-Host "    restart          Reinicia o servidor"
     Write-Host "    url              Mostra o endereco para o DJI Fly"
     Write-Host "    status           Mostra quem esta transmitindo"
-    Write-Host "    painel           Abre a tela de controle"
+    Write-Host "    painel           Abre o painel Studio Pro"
+    Write-Host "    replay           Abre direto o console de Replay"
+    Write-Host ""
+    Write-Host "NUVEM GLOBAL NGROK (4G/5G EM QUALQUER LUGAR)" -ForegroundColor White
+    Write-Host "    ngrok start      Inicia o tunel de transmissao remota"
+    Write-Host "    ngrok stop       Encerra o tunel"
+    Write-Host "    ngrok status     Exibe enderecos mundiais ativos"
+    Write-Host "    ngrok token <t>  Salva o authtoken ngrok"
     Write-Host ""
     Write-Host "SEM WI-FI NO LOCAL?" -ForegroundColor White
     Write-Host "    rede             Assistente para criar uma rede propria"
@@ -632,11 +702,6 @@ function Comando-Ajuda {
     Write-Host "VERIFICACAO" -ForegroundColor White
     Write-Host "    test [segundos]  Testa sem precisar do drone"
     Write-Host "    doctor           Diagnostica problemas"
-    Write-Host ""
-    Write-Host "PRIMEIRA VEZ? SIGA ESTA ORDEM" -ForegroundColor White
-    Write-Host "    1. .\windows\djio.ps1 doctor"
-    Write-Host "    2. .\windows\djio.ps1 start"
-    Write-Host "    3. .\windows\djio.ps1 test"
     Write-Host ""
 }
 
@@ -651,6 +716,9 @@ switch ($Comando.ToLower()) {
     "url"       { Comando-Url }
     "painel"    { Comando-Painel }
     "dashboard" { Comando-Painel }
+    "replay"    { Comando-Painel }
+    "ngrok"     { Comando-Ngrok $Arg1 $Arg2 }
+    "tunnel"    { Comando-Ngrok "start" }
     "test"      { Comando-Test }
     "teste"     { Comando-Test }
     "doctor"    { Comando-Doctor }
